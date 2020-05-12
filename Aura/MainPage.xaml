@@ -9,7 +9,7 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
 	<Grid>
-		<NavigationView OpenPaneLength="200">
+		<NavigationView Name="nav" OpenPaneLength="200" SelectionChanged="OnNavigationSelectionChanged" IsSettingsVisible="True">
 			<NavigationView.AutoSuggestBox>
 				<AutoSuggestBox QueryIcon="Find" PlaceholderText="Search" />
 			</NavigationView.AutoSuggestBox>
@@ -18,6 +18,11 @@
 				<NavigationViewItemSeparator />
 				<NavigationViewItemHeader>Library</NavigationViewItemHeader>
 				<NavigationViewItem Icon="People" Tag="encounters">Encounters</NavigationViewItem>
+				<NavigationViewItem Content="Layers" Tag="layers">
+					<NavigationViewItem.Icon>
+						<FontIcon Glyph="&#xE81E;" />
+					</NavigationViewItem.Icon>
+				</NavigationViewItem>
 				<NavigationViewItem Content="Playlists" Tag="playlists">
 					<NavigationViewItem.Icon>
 						<FontIcon Glyph="&#xE93C;" />
@@ -25,6 +30,9 @@
 				</NavigationViewItem>
 				<NavigationViewItem Icon="Preview" Tag="elements">Elements</NavigationViewItem>
 			</NavigationView.MenuItems>
+			<NavigationView.Content>
+				<Frame Name="contentFrame" />
+			</NavigationView.Content>
 			<NavigationView.PaneFooter>
 				<NavigationViewItem Icon="World">Campaign</NavigationViewItem>
 			</NavigationView.PaneFooter>
