@@ -1,16 +1,21 @@
 ﻿using System;
 using System.Net;
+using System.Net.Http;
 using System.Text.Json;
+using System.Composition;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR.Client;
 
 using Aura.Service.Messages;
+using Aura.Service.Client;
 
 namespace Aura.Service
 {
+	[Export (typeof(ILiveCampaignClient))]
 	public class LiveCampaignClient
+		: ILiveCampaignClient
 	{
 		public static bool IsLiveUrl (string url)
 		{
@@ -22,24 +27,43 @@ namespace Aura.Service
 
 		public static bool IsLiveUri (Uri uri) => uri.AbsoluteUri.StartsWith (baseUri);
 
-		public async Task<Campaign> CreateCampaignAsync (string name)
+		public async Task<RemoteCampaign> CreateCampaignAsync (string name, CancellationToken cancelToken)
 		{
 			try {
-				string response = await this.client.DownloadStringTaskAsync (new Uri (baseUri + "campaigns/create?name=" + name));
-				return JsonSerializer.Deserialize<Campaign> (response);
+				HttpResponseMessage response = await this.client.GetAsync (new Uri (baseUri + "campaigns/create?name=" + name), cancelToken).ConfigureAwait (false);
+				if (!response.IsSuccessStatusCode)
+					return null;
+
+				string responseContent = await response.Content.ReadAsStringAsync ().ConfigureAwait (false);
+				return JsonSerializer.Deserialize<RemoteCampaign> (responseContent, SerializerOptions);
 			} catch (WebException) {
 				return null;
 			}
 		}
 
-		public async Task<Campaign> GetCampaignDetailsAsync (string id)
+		public async Task<RemoteCampaign> GetCampaignDetailsAsync (Uri uri, CancellationToken cancelToken)
 		{
+			if (uri is null)
+				throw new ArgumentNullException (nameof (uri));
+
 			try {
-				string response = await this.client.DownloadStringTaskAsync (new Uri (baseUri + "campaigns/" + id));
-				return JsonSerializer.Deserialize<Campaign> (response);
+				HttpResponseMessage response = await this.client.GetAsync (uri, cancelToken).ConfigureAwait (false);
+				if (!response.IsSuccessStatusCode)
+					return null;
+
+				string responseContent = await response.Content.ReadAsStringAsync ().ConfigureAwait (false);
+				return JsonSerializer.Deserialize<RemoteCampaign> (responseContent, SerializerOptions);
 			} catch (WebException) {
 				return null;
 			}
+		}
+
+		public Task<RemoteCampaign> GetCampaignDetailsAsync (string id, CancellationToken cancelToken)
+		{
+			if (string.IsNullOrWhiteSpace (id))
+				throw new ArgumentException ("message", nameof (id));
+
+			return GetCampaignDetailsAsync (new Uri (baseUri + "campaigns/" + id), cancelToken);
 		}
 
 		public async Task ConnectToCampaignAsync (string id, CancellationToken cancelToken = default)
@@ -60,7 +84,10 @@ namespace Aura.Service
 		}
 
 		private const string baseUri = "http://localhost:7071/api/";
-		private readonly WebClient client = new WebClient ();
+		private readonly HttpClient client = new HttpClient ();
+		private static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions {
+			PropertyNameCaseInsensitive = true
+		};
 
 		private HubConnection connection;
 

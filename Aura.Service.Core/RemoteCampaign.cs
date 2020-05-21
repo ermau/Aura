@@ -2,7 +2,7 @@
 
 namespace Aura.Service
 {
-	public class Campaign
+	public class RemoteCampaign
     {
         public Guid id
         {
