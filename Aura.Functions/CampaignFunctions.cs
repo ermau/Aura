@@ -20,7 +20,7 @@ namespace Aura.Functions
         [FunctionName ("createcampaign")]
         public static async Task<IActionResult> CreateCampaign (
             [HttpTrigger (AuthorizationLevel.Anonymous, "get", "post", Route = "campaigns/create")] HttpRequest req,
-            [CosmosDB (databaseName: "campaigns", collectionName: "campaigns", ConnectionStringSetting = "CosmosDBConnection", CreateIfNotExists = true)] IAsyncCollector<Campaign> createdCampaigns,
+            [CosmosDB (databaseName: "campaigns", collectionName: "campaigns", ConnectionStringSetting = "CosmosDBConnection", CreateIfNotExists = true)] IAsyncCollector<RemoteCampaign> createdCampaigns,
             ILogger logger)
         {
             string name = req.Query["name"];
@@ -28,7 +28,7 @@ namespace Aura.Functions
                 return new BadRequestObjectResult ("Must include a name for the campaign");
 
             var id = Guid.NewGuid ();
-            var document = new Campaign {
+            var document = new RemoteCampaign {
                 id = id,
                 Part = id.ToString()[0].ToString(),
                 Name = name,
@@ -44,7 +44,7 @@ namespace Aura.Functions
         [FunctionName ("getcampaign")]
         public static IActionResult GetCampaign (
             [HttpTrigger (AuthorizationLevel.Anonymous, Route = "campaigns/{id}")] HttpRequest req,
-            [CosmosDB ("campaigns", "campaigns", ConnectionStringSetting = "CosmosDBConnection", SqlQuery = "select c.id,c.Name from campaigns c where c.id = {id} offset 0 limit 1")] IEnumerable<Campaign> campaigns,
+            [CosmosDB ("campaigns", "campaigns", ConnectionStringSetting = "CosmosDBConnection", SqlQuery = "select c.id,c.Name from campaigns c where c.id = {id} offset 0 limit 1")] IEnumerable<RemoteCampaign> campaigns,
             ILogger logger)
         {
             var campaign = campaigns.FirstOrDefault ();
@@ -54,11 +54,11 @@ namespace Aura.Functions
         [FunctionName ("negotiate")]
         public static async Task<SignalRConnectionInfo> Negotiate (
            [HttpTrigger (AuthorizationLevel.Anonymous, "post", Route = "campaigns/{id}/negotiate")] HttpRequest req,
-           [CosmosDB ("campaigns", "campaigns", ConnectionStringSetting = "CosmosDBConnection", SqlQuery = "select 1 from campaigns c where c.id = {id} offset 0 limit 1")] IEnumerable<Campaign> campaigns,
+           [CosmosDB ("campaigns", "campaigns", ConnectionStringSetting = "CosmosDBConnection", SqlQuery = "select 1 from campaigns c where c.id = {id} offset 0 limit 1")] IEnumerable<RemoteCampaign> campaigns,
            [SignalRConnectionInfo (HubName = "play", UserId = "{query.userid}")] SignalRConnectionInfo connection,
            ILogger logger)
         {
-            Campaign campaign = campaigns.FirstOrDefault ();
+            RemoteCampaign campaign = campaigns.FirstOrDefault ();
             if (campaign == null)
                 return null;
 
@@ -70,10 +70,10 @@ namespace Aura.Functions
             [HttpTrigger (AuthorizationLevel.Anonymous, "get", Route = "campaigns/{id}/connect")] HttpRequest req,
 			string id,
             [SignalR (HubName = "play")] IAsyncCollector<SignalRGroupAction> groupActions,
-            [CosmosDB ("campaigns", "campaigns", ConnectionStringSetting = "CosmosDBConnection", SqlQuery = "select 1 from campaigns c where c.id = {id} offset 0 limit 1")] IEnumerable<Campaign> campaigns,
+            [CosmosDB ("campaigns", "campaigns", ConnectionStringSetting = "CosmosDBConnection", SqlQuery = "select 1 from campaigns c where c.id = {id} offset 0 limit 1")] IEnumerable<RemoteCampaign> campaigns,
             ILogger logger)
         {
-            Campaign campaign = campaigns.FirstOrDefault ();
+            RemoteCampaign campaign = campaigns.FirstOrDefault ();
             if (campaign == null)
                 return new NotFoundObjectResult (null);
 
@@ -89,7 +89,7 @@ namespace Aura.Functions
         [FunctionName ("prepareLayer")]
         public static Task PrepareLayer (
             [HttpTrigger (AuthorizationLevel.Anonymous, "get", Route = "campaigns/{id}/prepareLayer")] HttpRequest req,
-            [CosmosDB ("campaigns", "campaigns", ConnectionStringSetting = "CosmosDBConnection", SqlQuery = "select c.Secret from campaigns c where c.id = {id} offset 0 limit 1")] IEnumerable<Campaign> campaigns,
+            [CosmosDB ("campaigns", "campaigns", ConnectionStringSetting = "CosmosDBConnection", SqlQuery = "select c.Secret from campaigns c where c.id = {id} offset 0 limit 1")] IEnumerable<RemoteCampaign> campaigns,
             string id,
             [SignalR (HubName = "play")] IAsyncCollector<SignalRMessage> messages,
             ILogger logger)
@@ -105,13 +105,13 @@ namespace Aura.Functions
             });
         }
 
-        private static Task Authorize (HttpRequest req, IEnumerable<Campaign> campaigns)
+        private static Task Authorize (HttpRequest req, IEnumerable<RemoteCampaign> campaigns)
         {
             string secret = req.Query["secret"];
             if (secret == null)
                 return Task.FromResult (new UnauthorizedResult ());
 
-            Campaign c = campaigns.FirstOrDefault ();
+            RemoteCampaign c = campaigns.FirstOrDefault ();
             if (c == null)
                 return Task.FromResult (new NotFoundResult ());
             if (c.Secret.ToString () != secret)
