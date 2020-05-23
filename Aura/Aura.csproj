@@ -135,6 +135,7 @@
       <DependentUpon>EncountersPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="FlyoutService.cs" />
+    <Compile Include="IconConverter.cs" />
     <Compile Include="LayersPage.xaml.cs">
       <DependentUpon>LayersPage.xaml</DependentUpon>
     </Compile>

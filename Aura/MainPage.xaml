@@ -4,14 +4,45 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Aura"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+	mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+	<Page.Resources>
+		<local:IconConverter x:Key="TypeIconConverter" />
+	</Page.Resources>
+	
+	<Grid AllowDrop="True" Drop="OnDrop" DragEnter="OnDragEnter" DragLeave="OnDragLeave">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition />
+		</Grid.RowDefinitions>
+		<Grid x:Name="AppTitleBar" Grid.Row="0" Background="Transparent">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition x:Name="LeftPaddingColumn" Width="0" />
+				<ColumnDefinition />
+				<ColumnDefinition x:Name="RightPaddingColumn" Width="0" />
+			</Grid.ColumnDefinitions>
 
-	<Grid>
-		<NavigationView Name="nav" OpenPaneLength="200" SelectionChanged="OnNavigationSelectionChanged" IsSettingsVisible="True">
+			<TextBlock Grid.Column="1">Aura</TextBlock>
+		</Grid>
+		
+		<NavigationView Grid.RowSpan="2" Name="nav" OpenPaneLength="200" SelectionChanged="OnNavigationSelectionChanged" IsSettingsVisible="True">
 			<NavigationView.AutoSuggestBox>
-				<AutoSuggestBox QueryIcon="Find" PlaceholderText="Search" />
+				<AutoSuggestBox Name="search" QueryIcon="Find" PlaceholderText="Search" QuerySubmitted="SearchQuerySubmitted" TextChanged="SearchTextChanged" ItemsSource="{Binding SearchResults}" TextMemberPath="Name">
+					<AutoSuggestBox.ItemTemplate>
+						<DataTemplate>
+							<Grid>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="Auto" />
+									<ColumnDefinition Width="*" />
+								</Grid.ColumnDefinitions>
+
+								<ContentPresenter Grid.Column="0" Content="{Binding Converter={StaticResource TypeIconConverter}}" />
+								<TextBlock Margin="10,0,0,0" Grid.Column="1" Text="{Binding Name}" />
+							</Grid>
+						</DataTemplate>
+					</AutoSuggestBox.ItemTemplate>
+				</AutoSuggestBox>
 			</NavigationView.AutoSuggestBox>
 			<NavigationView.MenuItems>
 				<NavigationViewItem Icon="Play" Tag="play">Play</NavigationViewItem>
@@ -34,7 +65,36 @@
 				<Frame Name="contentFrame" />
 			</NavigationView.Content>
 			<NavigationView.PaneFooter>
-				<NavigationViewItem Icon="World">Campaign</NavigationViewItem>
+				<StackPanel>
+					<NavigationViewItem Name="playspacesNav" Icon="Home" Content="Home" Tapped="OnHomeTapped">
+						<NavigationViewItem.ContextFlyout>
+							<MenuFlyout x:Name="playspacesMenu">
+								<controls:RadioMenuFlyoutItem Icon="Home" IsChecked="True">Home</controls:RadioMenuFlyoutItem>
+								<MenuFlyoutSeparator />
+								<MenuFlyoutItem Icon="Edit">Edit Playspaces</MenuFlyoutItem>
+							</MenuFlyout>
+						</NavigationViewItem.ContextFlyout>
+					</NavigationViewItem>
+					<NavigationViewItem Name="campaignsNav" Icon="World" HorizontalContentAlignment="Stretch" Tapped="OnCampaignTapped">
+						<Grid Width="150">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*" />
+								<ColumnDefinition Width="Auto" />
+							</Grid.ColumnDefinitions>
+							<TextBlock VerticalAlignment="Center" Text="{Binding Campaigns.SelectedElement.Name}" />
+							<Button Style="{ThemeResource ButtonRevealStyle}" Grid.Column="1" Height="30" Background="Transparent">
+								<SymbolIcon Symbol="Share" />
+							</Button>
+						</Grid>
+						<NavigationViewItem.ContextFlyout>
+							<MenuFlyout x:Name="campaignsMenu">
+								<MenuFlyoutSeparator Name="campaignSeparator" />
+								<MenuFlyoutItem Icon="Edit">Edit Campaigns</MenuFlyoutItem>
+								<MenuFlyoutItem Icon="Link">Join Campaign</MenuFlyoutItem>
+							</MenuFlyout>
+						</NavigationViewItem.ContextFlyout>
+					</NavigationViewItem>
+				</StackPanel>
 			</NavigationView.PaneFooter>
 		</NavigationView>
 	</Grid>
