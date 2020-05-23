@@ -134,6 +134,7 @@
     <Compile Include="EncountersPage.xaml.cs">
       <DependentUpon>EncountersPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="FlyoutService.cs" />
     <Compile Include="LayersPage.xaml.cs">
       <DependentUpon>LayersPage.xaml</DependentUpon>
     </Compile>
@@ -147,9 +148,11 @@
       <DependentUpon>PlayPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\LocalSyncService.cs" />
     <Compile Include="SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="WinExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -216,11 +219,31 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.9</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.Toolkit.Uwp.UI.Controls">
+      <Version>6.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.UI.Xaml">
+      <Version>2.4.0</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.3</Version>
+    </PackageReference>
+    <PackageReference Include="System.Composition">
+      <Version>1.4.0</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Aura.Core\Aura.Core.csproj">
       <Project>{6e52b6c9-3647-4d17-b2d0-2d606c6b0297}</Project>
       <Name>Aura.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Aura.Service.Client\Aura.Service.Client.csproj">
+      <Project>{8eade3b6-e1fa-4382-bac6-ddb8a367281a}</Project>
+      <Name>Aura.Service.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Aura.Service.Core\Aura.Service.Core.csproj">
+      <Project>{989FD3C3-88D9-437B-AC9F-532990245F57}</Project>
+      <Name>Aura.Service.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
