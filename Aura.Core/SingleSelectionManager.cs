@@ -16,8 +16,15 @@ namespace Aura
 	{
 		public SingleSelectionManager (ISyncService syncService)
 		{
+			Messenger.Default.Register<ElementsChangedMessage> (this, OnElementsChanged);
 			SyncService = syncService ?? throw new ArgumentNullException (nameof (syncService));
 			LoadElementsAsync ();
+		}
+
+		public Task Loading
+		{
+			get;
+			private set;
 		}
 
 		public IReadOnlyList<T> Elements => this.elements;
@@ -71,7 +78,13 @@ namespace Aura
 
 		private async void LoadElementsAsync ()
 		{
-			await ReloadElementsAsync ();
+			await (Loading = ReloadElementsAsync ());
+		}
+
+		private void OnElementsChanged (ElementsChangedMessage change)
+		{
+			if (typeof (T).IsAssignableFrom (change.Type))
+				LoadElementsAsync ();
 		}
 	}
 }
