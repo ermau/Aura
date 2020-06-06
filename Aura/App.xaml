@@ -9,8 +9,11 @@
 				<XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
 			</ResourceDictionary.MergedDictionaries>
 
+			<local:BoolVisibilityConverter x:Key="InvertBoolVisibility" Invert="True" />
+			<local:BoolVisibilityConverter x:Key="BoolVisibility" />
+			
 			<Flyout x:Key="CopyConnectFlyout">
-				<Grid>
+				<Grid local:FlyoutService.IsVisible="{Binding IsOpen,Mode=TwoWay}">
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition />
 						<ColumnDefinition />
@@ -24,16 +27,18 @@
 			</Flyout>
 
 			<Flyout x:Key="ServiceAvailableFlyout">
-				<Grid MaxWidth="650">
+				<Grid MaxWidth="650" local:FlyoutService.IsVisible="{Binding IsOpen,Mode=TwoWay}">
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition />
 						<ColumnDefinition />
-						<ColumnDefinition />
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="Auto" />
 					</Grid.ColumnDefinitions>
 
 					<FontIcon Grid.Column="0" VerticalAlignment="Center" Glyph="&#xEA80;" />
 					<TextBlock Grid.Column="1" Margin="10,0,0,0" TextWrapping="WrapWholeWords" Text="{Binding Message,Mode=OneTime}" VerticalAlignment="Center" />
 					<Button Grid.Column="2" Margin="10,0,0,0" Style="{ThemeResource AccentButtonStyle}" VerticalAlignment="Center" Command="{Binding EnableCommand,Mode=OneTime}">Enable</Button>
+					<Button Grid.Column="3" Margin="10,0,0,0" VerticalAlignment="Center" Command="{Binding CancelCommand,Mode=OneTime}">Cancel</Button>
 				</Grid>
 			</Flyout>
 		</ResourceDictionary>

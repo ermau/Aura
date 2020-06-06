@@ -10,12 +10,15 @@ using GalaSoft.MvvmLight.Command;
 namespace Aura.ViewModels
 {
 	internal class JoinCampaignRequestViewModel
-		: ViewModelBase
+		: PromptRequestViewModel
 	{
 		public JoinCampaignRequestViewModel (RemoteCampaign campaign)
 		{
 			Campaign = campaign ?? throw new ArgumentNullException (nameof (campaign));
-			JoinCommand = new RelayCommand (() => MessengerInstance.Send (new RequestJoinCampaignMessage (Campaign)));
+			JoinCommand = new RelayCommand (() => {
+				MessengerInstance.Send (new RequestJoinCampaignMessage (Campaign));
+				IsOpen = false;
+			});
 		}
 
 		public RemoteCampaign Campaign { get; }
@@ -25,6 +28,9 @@ namespace Aura.ViewModels
 			get;
 		}
 
-		public string Message => $"Would you like to join {Campaign.Name}?";
+		public override string Message
+		{
+			get => $"Would you like to join {Campaign.Name}?";
+		}
 	}
 }

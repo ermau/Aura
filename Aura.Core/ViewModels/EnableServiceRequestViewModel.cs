@@ -7,15 +7,21 @@ using GalaSoft.MvvmLight.Command;
 namespace Aura.ViewModels
 {
 	internal class EnableServiceRequestViewModel
-		: ViewModelBase
+		: PromptRequestViewModel
 	{
 		public EnableServiceRequestViewModel (IService service)
 		{
 			Service = service ?? throw new ArgumentNullException (nameof (service));
-			EnableCommand = new RelayCommand (() => MessengerInstance.Send (new EnableServiceMessage (Service)));
+			EnableCommand = new RelayCommand (() => {
+				MessengerInstance.Send (new EnableServiceMessage (Service));
+				IsOpen = false;
+			});
 		}
 
-		public string Message => $"Enable {Service.DisplayName} for current space?";
+		public override string Message
+		{
+			get => $"Enable {Service.DisplayName} for current space?";
+		}
 		
 		public IService Service { get; }
 
