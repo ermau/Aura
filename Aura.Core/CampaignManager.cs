@@ -28,7 +28,11 @@ namespace Aura
 
 		private async Task<Campaign> CreateCampaignAsync (RemoteCampaign campaign)
 		{
-			var c = new Campaign {
+			Campaign c = Elements.FirstOrDefault (e => e.Id == campaign.id.ToString ());
+			if (c != null)
+				return c;
+
+			c = new Campaign {
 				Id = campaign.id.ToString(),
 				IsRemote = true,
 				Name = campaign.Name,
