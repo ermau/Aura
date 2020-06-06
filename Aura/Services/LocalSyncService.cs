@@ -7,13 +7,17 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Toolkit.Uwp.Helpers;
+
+using Aura.Messages;
+
+using GalaSoft.MvvmLight.Messaging;
+
 using Newtonsoft.Json;
 using Windows.Storage;
 
 namespace Aura.Services
 {
-	[Export (typeof(ISyncService))]
+	[Export (typeof(ISyncService)), Shared]
 	internal class LocalSyncService
 		: ISyncService
 	{
@@ -89,8 +93,10 @@ namespace Aura.Services
 					this.elements[GetSimpleTypeName (elementType)] = items = new Dictionary<string, object> ();
 				}
 
+				element.Id = element.Id ?? Guid.NewGuid ().ToString ();
 				items[element.Id] = element;
 				await SaveAsync();
+				Messenger.Default.Send (new ElementsChangedMessage (elementType));
 			} finally {
 				this.sync.Release ();
 			}
@@ -109,9 +115,10 @@ namespace Aura.Services
 					return;
 				}
 
-				items.Remove (element.Id);
-
-				await SaveAsync ().ConfigureAwait (false);
+				if (items.Remove (element.Id)) {
+					await SaveAsync ().ConfigureAwait (false);
+					Messenger.Default.Send (new ElementsChangedMessage (elementType));
+				}
 			} finally {
 				this.sync.Release ();
 			}
