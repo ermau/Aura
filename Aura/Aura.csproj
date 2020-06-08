@@ -137,6 +137,9 @@
     </Compile>
     <Compile Include="FlyoutService.cs" />
     <Compile Include="IconConverter.cs" />
+    <Compile Include="JoinCampaignDialog.xaml.cs">
+      <DependentUpon>JoinCampaignDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="LayersPage.xaml.cs">
       <DependentUpon>LayersPage.xaml</DependentUpon>
     </Compile>
@@ -193,6 +196,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="EncountersPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="JoinCampaignDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

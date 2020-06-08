@@ -66,31 +66,20 @@
 			</NavigationView.Content>
 			<NavigationView.PaneFooter>
 				<StackPanel>
-					<NavigationViewItem Name="playspacesNav" Icon="Home" Content="Home" Tapped="OnHomeTapped">
+					<NavigationViewItem Name="playspacesNav" Tag="playspaces" Icon="Home" Content="{Binding PlaySpaces.SelectedElement.Name}" Tapped="OnHomeTapped">
 						<NavigationViewItem.ContextFlyout>
 							<MenuFlyout x:Name="playspacesMenu">
-								<controls:RadioMenuFlyoutItem Icon="Home" IsChecked="True">Home</controls:RadioMenuFlyoutItem>
 								<MenuFlyoutSeparator />
-								<MenuFlyoutItem Icon="Edit">Edit Playspaces</MenuFlyoutItem>
+								<MenuFlyoutItem Icon="Edit" Click="OnEditPlayspaces">Edit Playspaces</MenuFlyoutItem>
 							</MenuFlyout>
 						</NavigationViewItem.ContextFlyout>
 					</NavigationViewItem>
-					<NavigationViewItem Name="campaignsNav" Icon="World" HorizontalContentAlignment="Stretch" Tapped="OnCampaignTapped">
-						<Grid Width="150">
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="*" />
-								<ColumnDefinition Width="Auto" />
-							</Grid.ColumnDefinitions>
-							<TextBlock VerticalAlignment="Center" Text="{Binding Campaigns.SelectedElement.Name}" />
-							<Button Style="{ThemeResource ButtonRevealStyle}" Grid.Column="1" Height="30" Background="Transparent">
-								<SymbolIcon Symbol="Share" />
-							</Button>
-						</Grid>
+					<NavigationViewItem Name="campaignsNav" Tag="campaigns" Icon="World" Content="{Binding Campaigns.SelectedElement.Name}" HorizontalContentAlignment="Stretch" Tapped="OnCampaignTapped">
 						<NavigationViewItem.ContextFlyout>
 							<MenuFlyout x:Name="campaignsMenu">
 								<MenuFlyoutSeparator Name="campaignSeparator" />
-								<MenuFlyoutItem Icon="Edit">Edit Campaigns</MenuFlyoutItem>
-								<MenuFlyoutItem Icon="Link">Join Campaign</MenuFlyoutItem>
+								<MenuFlyoutItem Icon="Edit" Click="OnEditCampaigns">Edit Campaigns</MenuFlyoutItem>
+								<MenuFlyoutItem Icon="Link" Click="OnJoinCampaign">Join Campaign</MenuFlyoutItem>
 							</MenuFlyout>
 						</NavigationViewItem.ContextFlyout>
 					</NavigationViewItem>

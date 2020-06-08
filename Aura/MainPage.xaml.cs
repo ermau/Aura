@@ -43,6 +43,10 @@ namespace Aura
 
 			FlyoutService.RegisterFlyoutTarget (this.contentFrame);
 
+			var titleBar = ApplicationView.GetForCurrentView ().TitleBar;
+			titleBar.ButtonBackgroundColor = Colors.Transparent;
+			titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+
 			var coreTitleBar = CoreApplication.GetCurrentView ().TitleBar;
 			coreTitleBar.ExtendViewIntoTitleBar = true;
 			UpdateTitleBarLayout (coreTitleBar);
@@ -66,7 +70,7 @@ namespace Aura
 			OnPlaySpacesChanged (null, new NotifyCollectionChangedEventArgs (NotifyCollectionChangedAction.Reset));
 		}
 
-		private void UpdateMenu<T> (NavigationViewItem navItem, IconElement elementIcon, NotifyCollectionChangedEventArgs e, SingleSelectionManager<T> manager)
+		private void UpdateMenu<T> (NavigationViewItem navItem, IconElement elementIcon, NotifyCollectionChangedEventArgs e, SingleSelectionManager<T> manager, T emptyElement = null)
 			where T : NamedElement
 		{
 			var menu = (MenuFlyout)navItem.ContextFlyout;
@@ -74,6 +78,17 @@ namespace Aura
 			int i;
 			for (i = 0; i < sepIndex; i++) {
 				menu.Items.RemoveAt (0);
+			}
+
+			if (manager.Elements.Count == 0) {
+				if (emptyElement != null) {
+					menu.Items.Insert (0, new MenuFlyoutItem {
+						Text = emptyElement.Name,
+						IsEnabled = false
+					});
+				}
+
+				return;
 			}
 
 			i = 0;
@@ -86,18 +101,20 @@ namespace Aura
 				radio.SetBinding (MenuFlyoutItem.TextProperty, new Binding { Path = new PropertyPath ("Name"), Mode = BindingMode.OneTime });
 				radio.SetBinding (Microsoft.UI.Xaml.Controls.RadioMenuFlyoutItem.IsCheckedProperty, new Binding { Path = new PropertyPath (nameof(SingleSelectionItemViewModel<NamedElement>.IsSelected)), Mode = BindingMode.TwoWay });
 
-				this.campaignsMenu.Items.Insert (i++, radio);
+				menu.Items.Insert (i++, radio);
 			}
 		}
 
-		private void OnPlaySpacesChanged (object sender, NotifyCollectionChangedEventArgs e)
+		private async void OnPlaySpacesChanged (object sender, NotifyCollectionChangedEventArgs e)
 		{
-			UpdateMenu (this.playspacesNav, new SymbolIcon (Symbol.Home), e, this.vm.PlaySpaces);
+			await Dispatcher.RunAsync (CoreDispatcherPriority.Normal, () =>
+				UpdateMenu (this.playspacesNav, new SymbolIcon (Symbol.Home), e, this.vm.PlaySpaces));
 		}
 
-		private void OnCampaignsChanged (object sender, NotifyCollectionChangedEventArgs e)
+		private async void OnCampaignsChanged (object sender, NotifyCollectionChangedEventArgs e)
 		{
-			UpdateMenu (this.campaignsNav, new SymbolIcon (Symbol.World), e, this.vm.Campaigns);
+			await Dispatcher.RunAsync (CoreDispatcherPriority.Normal, () =>
+				UpdateMenu (this.campaignsNav, new SymbolIcon (Symbol.World), e, this.vm.Campaigns, new Campaign { Name = "No campaigns" }));
 		}
 
 		private void UpdateTitleBarLayout (CoreApplicationViewTitleBar title)
@@ -262,6 +279,16 @@ namespace Aura
 		private async void OnJoinCampaign (object sender, RoutedEventArgs e)
 		{
 			Messenger.Default.Send (new RequestJoinCampaignPromptMessage ());
+		}
+
+		private void OnEditCampaigns (object sender, RoutedEventArgs e)
+		{
+			this.nav.SelectedItem = this.campaignsNav;
+		}
+
+		private void OnEditPlayspaces (object sender, RoutedEventArgs e)
+		{
+			this.nav.SelectedItem = this.playspacesNav;
 		}
 	}
 }
