@@ -239,9 +239,9 @@
       <Project>{6e52b6c9-3647-4d17-b2d0-2d606c6b0297}</Project>
       <Name>Aura.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Aura.Service.Client\Aura.Service.Client.csproj">
-      <Project>{8eade3b6-e1fa-4382-bac6-ddb8a367281a}</Project>
-      <Name>Aura.Service.Client</Name>
+    <ProjectReference Include="..\Aura.Hue\Aura.Hue.csproj">
+      <Project>{5b44c21e-95f7-4b96-a923-4149b742a296}</Project>
+      <Name>Aura.Hue</Name>
     </ProjectReference>
     <ProjectReference Include="..\Aura.Service.Core\Aura.Service.Core.csproj">
       <Project>{989FD3C3-88D9-437B-AC9F-532990245F57}</Project>
