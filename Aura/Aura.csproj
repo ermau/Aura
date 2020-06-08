@@ -119,6 +119,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="BoolVisibilityConverter.cs" />
     <Compile Include="CreateCampaignDialog.xaml.cs">
       <DependentUpon>CreateCampaignDialog.xaml</DependentUpon>
     </Compile>

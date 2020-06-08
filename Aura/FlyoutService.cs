@@ -32,11 +32,38 @@ using Windows.Foundation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Media;
 
 namespace Aura
 {
 	internal static class FlyoutService
 	{
+		public static readonly DependencyProperty IsVisibleProperty = DependencyProperty.RegisterAttached ("IsVisible", typeof (bool), typeof (FlyoutService), new PropertyMetadata (true, IsOpenChangedCallback));
+
+		public static void SetIsVisible (DependencyObject element, bool value)
+		{
+			element.SetValue (IsVisibleProperty, value);
+		}
+
+		public static bool GetIsVisible (DependencyObject element)
+		{
+			return (bool)element.GetValue (IsVisibleProperty);
+		}
+
+		private static void IsOpenChangedCallback (DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			Popup flyout = d.FindActiveFlyout ();
+			if (flyout == null)
+				return;
+
+			if ((bool)e.NewValue) {
+				flyout.Closed += OnFlyoutClosed;
+			} else {
+				flyout.Closed -= OnFlyoutClosed;
+				flyout.IsOpen = false;
+			}
+		}
+
 		public static void RegisterFlyoutTarget (FrameworkElement element)
 		{
 			if (element is null)
@@ -102,9 +129,14 @@ namespace Aura
 
 		private static void OnFlyoutClosed (object sender, object e)
 		{
+			SetIsVisible (((Flyout)sender).Content, false);
+
+			Flyout newFlyout = null;
 			var closed = (Flyout)sender;
-			Flyouts.TryPop (out Flyout flyout);
-			SwapFlyouts (closed, flyout);
+			if (CurrentFlyout == closed)
+				Flyouts.TryPop (out newFlyout);
+
+			SwapFlyouts (closed, newFlyout);
 		}
 	}
 }
