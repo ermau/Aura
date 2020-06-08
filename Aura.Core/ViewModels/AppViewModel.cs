@@ -9,11 +9,11 @@ namespace Aura.ViewModels
 	internal class AppViewModel
 		: ViewModelBase
 	{
-		public AppViewModel (ISyncService syncService)
+		public AppViewModel (ISyncService syncService, CampaignManager campaigns, PlaySpaceManager playSpaces)
 		{
-			Campaigns = new CampaignManager (syncService);
-			PlaySpaces = new PlaySpaceManager (syncService);
-			this.syncService = syncService;
+			Campaigns = campaigns ?? throw new ArgumentNullException (nameof (campaigns));
+			PlaySpaces = playSpaces ?? throw new ArgumentNullException (nameof (playSpaces));
+			this.syncService = syncService ?? throw new ArgumentNullException (nameof (syncService));
 		}
 
 		public CampaignManager Campaigns

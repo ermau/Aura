@@ -5,17 +5,22 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Aura.Messages;
 using Aura.Service;
 using Aura.Service.Client;
 using Aura.ViewModels;
 
 using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Messaging;
 
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Storage;
+using Windows.UI;
 using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -29,7 +34,12 @@ namespace Aura
 		public MainPage()
 		{
 			InitializeComponent();
-			SetupDataContext ();
+			SetupDataContext (App.Services);
+
+			Messenger.Default.Register<RequestJoinCampaignPromptMessage> (this, async rj => {
+				var join = new JoinCampaignDialog ();
+				await join.ShowAsync ();
+			});
 
 			FlyoutService.RegisterFlyoutTarget (this.contentFrame);
 
@@ -46,9 +56,9 @@ namespace Aura
 
 		private AppViewModel vm;
 
-		private async void SetupDataContext()
+		private async void SetupDataContext (IAsyncServiceProvider services)
 		{
-			this.vm = new AppViewModel (await App.GetServiceAsync<ISyncService> ());
+			this.vm = new AppViewModel (await services.GetServiceAsync<ISyncService> (), await services.GetServiceAsync<CampaignManager>(), await services.GetServiceAsync<PlaySpaceManager>());
 			DataContext = this.vm;
 			((INotifyCollectionChanged)this.vm.Campaigns.Elements).CollectionChanged += OnCampaignsChanged;
 			OnCampaignsChanged (null, new NotifyCollectionChangedEventArgs (NotifyCollectionChangedAction.Reset));
@@ -132,25 +142,26 @@ namespace Aura
 		private async void OnClipboardContentChanged (object sender, object e)
 		{
 			DataPackageView dataPackageView = Clipboard.GetContent ();
-			if (dataPackageView.AvailableFormats.Contains (StandardDataFormats.Text)) {
-				string text = await dataPackageView.GetTextAsync ();
-				if (!LiveCampaignClient.IsLiveUrl (text))
+			string url = await dataPackageView.TryGetJoinLinkAsync ();
+			if (url == null)
+				return;
+			
+			var newSource = new CancellationTokenSource (15000);
+			var oldSource = Interlocked.Exchange (ref this.clipboardCampaignCancel, newSource);
+			oldSource?.Cancel ();
+
+			var client = await App.Services.GetServiceAsync<ILiveCampaignClient> ();
+			try {
+				RemoteCampaign campaign = await client.GetCampaignDetailsAsync (new Uri (url), newSource.Token);
+				if (campaign == null)
 					return;
 
-				System.Diagnostics.Debug.WriteLine ("OnClipboardContentChanged");
-				var newSource = new CancellationTokenSource (15000);
-				var oldSource = Interlocked.Exchange (ref this.clipboardCampaignCancel, newSource);
-				oldSource?.Cancel ();
+				var campaigns = await App.Services.GetServiceAsync<CampaignManager> ();
+				if (campaigns.Elements.Any (c => c.Id == campaign.id.ToString ()))
+					return;
 
-				var client = await App.GetServiceAsync<ILiveCampaignClient> ();
-				try {
-					RemoteCampaign campaign = await client.GetCampaignDetailsAsync (new Uri (text), newSource.Token);
-					if (campaign == null)
-						return;
-
-					FlyoutService.PushFlyout ("CopyConnectFlyout", new JoinCampaignRequestViewModel (campaign));
-				} catch (OperationCanceledException) {
-				}
+				FlyoutService.PushFlyout ("CopyConnectFlyout", new JoinCampaignRequestViewModel (campaign));
+			} catch (OperationCanceledException) {
 			}
 		}
 
@@ -175,7 +186,7 @@ namespace Aura
 				});
 			} else if (e.DataView.AvailableFormats.Contains (StandardDataFormats.Text)) {
 				string text = e.DataView.GetTextAsync ().AsTask().Result;
-				if (LiveCampaignClient.IsLiveUrl (text)) {
+				if (LiveCampaignClient.IsLiveUri (text)) {
 					e.AcceptedOperation = DataPackageOperation.Link;
 					e.DragUIOverride.IsCaptionVisible = false;
 
@@ -246,6 +257,11 @@ namespace Aura
 		{
 			if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
 				this.vm.SearchQuery = sender.Text;
+		}
+
+		private async void OnJoinCampaign (object sender, RoutedEventArgs e)
+		{
+			Messenger.Default.Send (new RequestJoinCampaignPromptMessage ());
 		}
 	}
 }

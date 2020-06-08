@@ -5,6 +5,18 @@ using Aura.Service;
 
 namespace Aura.Messages
 {
+	internal class RequestCampaignPromptMessage
+	{
+	}
+
+	internal class RequestJoinCampaignPromptMessage
+	{
+	}
+
+	internal class RequestCreateCampaignPromptMessage
+	{
+	}
+
 	internal class RequestJoinCampaignMessage
 	{
 		public RequestJoinCampaignMessage (RemoteCampaign campaign)
@@ -15,6 +27,7 @@ namespace Aura.Messages
 		public RemoteCampaign Campaign
 		{
 			get;
+			set;
 		}
 	}
 }

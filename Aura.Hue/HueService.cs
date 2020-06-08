@@ -6,7 +6,7 @@ using Q42.HueApi;
 
 namespace Aura.Hue
 {
-	[Export (typeof(IService))]
+	[Export (typeof(IService)), Shared]
 	public class HueService
 		: IDiscoverableService
 	{

@@ -1,89 +1,60 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Composition;
-using System.Composition.Convention;
 using System.Composition.Hosting;
-using System.Composition.Hosting.Core;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+
+using Aura.Messages;
+
+using GalaSoft.MvvmLight.Messaging;
 
 namespace Aura
 {
-	public class RoleQuestionEventArgs
-		: EventArgs
+	internal static class GettingStarted
 	{
-		public Task<bool> IsGameMaster
+		public static async Task StartAsync (IAsyncServiceProvider services, Task uiReady)
 		{
-			get;
-			set;
-		}
-	}
+			if (services is null)
+				throw new ArgumentNullException (nameof (services));
 
-	public class ServiceDiscoveredEventArgs
-		: EventArgs
-	{
-		public ServiceDiscoveredEventArgs (IDiscoverableService service)
-		{
-			if (service is null)
-				throw new ArgumentNullException (nameof (service));
-
-			Service = service;
-		}
-
-		public IDiscoverableService Service
-		{
-			get;
-		}
-	}
-
-	public static class GettingStarted
-	{
-		public static event EventHandler<RoleQuestionEventArgs> AskingRole;
-		public static event EventHandler RequestCreateCampaign;
-		public static event EventHandler RequestJoinCampaign;
-		public static event EventHandler<ServiceDiscoveredEventArgs> ServiceDiscovered;
-
-		public static async Task StartAsync (CompositionHost composition, Task uiReady)
-		{
+			Task playspacesSetup = RunPlayspacesSetupAsync (services);
 			await uiReady;
-			await RunRoleSetupAsync ();
-			await RunServiceDiscoveryAsync (composition);
+			await RunCampaignSetupAsync (services);
+			await playspacesSetup;
+			await RunServiceDiscoveryAsync (services);
 		}
 
-		private static async Task RunRoleSetupAsync()
+		private static async Task RunCampaignSetupAsync (IAsyncServiceProvider services)
 		{
-			var isGmQuestion = new RoleQuestionEventArgs ();
-			AskingRole?.Invoke (null, isGmQuestion);
-			if (isGmQuestion.IsGameMaster == null)
-				return;
+			var campaigns = await services.GetServiceAsync<CampaignManager> ();
+			await campaigns.Loading;
 
-			bool isGm = await isGmQuestion.IsGameMaster;
-
-			if (isGm)
-				await RunGmSetupAsync ();
-			else
-				await RunPlayerSetupAsync ();
+			if (campaigns.Elements.Count == 0) {
+				Messenger.Default.Send (new RequestCampaignPromptMessage ());
+			}
 		}
 
-		private static async Task RunGmSetupAsync()
+		private static async Task RunPlayspacesSetupAsync (IAsyncServiceProvider services)
 		{
-			RequestCreateCampaign?.Invoke (null, EventArgs.Empty);
+			var playspaces = await services.GetServiceAsync<PlaySpaceManager> ().ConfigureAwait (false);
+			await playspaces.Loading.ConfigureAwait (false);
+
+			if (playspaces.Elements.Count == 0) {
+				var home = new PlaySpace { Name = "Home" };
+				ISyncService sync = await services.GetServiceAsync<ISyncService> ().ConfigureAwait (false);
+				await sync.SaveElementAsync (home).ConfigureAwait (false);
+				await playspaces.Loading.ConfigureAwait (false);
+			}
 		}
 
-		private static async Task RunPlayerSetupAsync()
-		{
-			RequestJoinCampaign?.Invoke (null, EventArgs.Empty);
-		}
-
-		private static Task RunServiceDiscoveryAsync (CompositionHost composition)
+		private static Task RunServiceDiscoveryAsync (IAsyncServiceProvider services)
 		{
 			return Task.Run (async () => {
-				IDiscoverableService[] services = composition.GetExports<IService> ().OfType<IDiscoverableService> ().ToArray ();
+				IDiscoverableService[] dservices = (await services.GetServicesAsync<IService> ()).OfType<IDiscoverableService> ().ToArray ();
 
-				var results = new Dictionary<Task<bool>, IDiscoverableService> (services.Length);
-				for (int i = 0; i < services.Length; i++) {
-					results.Add (services[i].DiscoverAsync (), services[i]);
+				var results = new Dictionary<Task<bool>, IDiscoverableService> (dservices.Length);
+				for (int i = 0; i < dservices.Length; i++) {
+					results.Add (dservices[i].DiscoverAsync (), dservices[i]);
 				}
 
 				while (results.Count > 0) {
@@ -91,7 +62,7 @@ namespace Aura
 					IDiscoverableService service = results[completed];
 					results.Remove (completed);
 
-					ServiceDiscovered?.Invoke (null, new ServiceDiscoveredEventArgs (service));
+					Messenger.Default.Send (new ServiceDiscoveredMesage (service));
 				}
 			});
 		}

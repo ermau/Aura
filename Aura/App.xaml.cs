@@ -1,17 +1,18 @@
 ﻿using System;
-using System.Composition.Hosting;
 using System.Threading.Tasks;
+
+using Aura.Messages;
 using Aura.Service.Client;
 using Aura.Services;
 using Aura.ViewModels;
-using GalaSoft.MvvmLight.Ioc;
+
+using GalaSoft.MvvmLight.Messaging;
+
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using Xamarin.Essentials.Implementation;
-using Xamarin.Essentials.Interfaces;
 
 namespace Aura
 {
@@ -28,20 +29,10 @@ namespace Aura
 			Suspending += OnSuspending;
 		}
 
-		public static Task<CompositionHost> CompositionHost
+		internal static IAsyncServiceProvider Services
 		{
 			get;
 			private set;
-		}
-
-		public static async Task<T> GetServiceAsync<T>()
-		{
-			if (typeof (T).Assembly.FullName.StartsWith ("Xamarin")) {
-				return SimpleIoc.Default.GetInstance<T> ();
-			} else {
-				var host = await CompositionHost.ConfigureAwait (false);
-				return host.GetExport<T> ();
-			}
 		}
 
 		/// <summary>
@@ -51,12 +42,15 @@ namespace Aura
 		/// <param name="e">Details about the launch request and process.</param>
 		protected override void OnLaunched(LaunchActivatedEventArgs e)
 		{
-			GettingStarted.ServiceDiscovered += OnServiceDiscovered;
+			Messenger.Default.Register<ServiceDiscoveredMesage> (this, OnServiceDiscovered);
 
 			var uiReady = new TaskCompletionSource<bool> ();
-			SetupCompositionAsync ().ContinueWith (async t => {
-				await GettingStarted.StartAsync (t.Result, uiReady.Task);
-			}, TaskScheduler.FromCurrentSynchronizationContext());
+			this.serviceProvider = new AsyncServiceProvider (typeof (App).Assembly, typeof (Hue.HueService).Assembly, typeof (ILiveCampaignClient).Assembly);
+			Services = this.serviceProvider;
+			this.serviceProvider.Expect<CampaignManager> ();
+			this.serviceProvider.Expect<PlaySpaceManager> ();
+
+			StartupAsync (uiReady.Task);
 
 			this.rootFrame = Window.Current.Content as Frame;
 			if (rootFrame == null) {
@@ -84,25 +78,22 @@ namespace Aura
 		}
 
 		private Frame rootFrame;
+		private AsyncServiceProvider serviceProvider;
 
-		private async void OnServiceDiscovered (object sender, ServiceDiscoveredEventArgs e)
+		private async void StartupAsync (Task uiReady)
 		{
-			await this.rootFrame.Dispatcher.RunAsync (Windows.UI.Core.CoreDispatcherPriority.Low, () => {
-				FlyoutService.PushFlyout ("ServiceAvailableFlyout", new EnableServiceRequestViewModel (e.Service));
-			});
+			ISyncService sync = await this.serviceProvider.GetServiceAsync<ISyncService> ();
+
+			this.serviceProvider.Register (new CampaignManager (sync));
+			this.serviceProvider.Register (new PlaySpaceManager (sync));
+
+			await GettingStarted.StartAsync (this.serviceProvider, uiReady);
 		}
 
-		private Task<CompositionHost> SetupCompositionAsync()
+		private async void OnServiceDiscovered (ServiceDiscoveredMesage msg)
 		{
-			SimpleIoc.Default.Register<IPreferences, PreferencesImplementation> ();
-
-			return CompositionHost = Task.Run (() => {
-				ContainerConfiguration configuration = new ContainerConfiguration ();
-				return configuration.WithAssemblies (new[] {
-					typeof (App).Assembly,
-					typeof (Aura.Hue.HueService).Assembly,
-					typeof (ILiveCampaignClient).Assembly
-				}).CreateContainer();
+			await this.rootFrame.Dispatcher.RunAsync (Windows.UI.Core.CoreDispatcherPriority.Low, () => {
+				FlyoutService.PushFlyout ("ServiceAvailableFlyout", new EnableServiceRequestViewModel (msg.Service));
 			});
 		}
 
