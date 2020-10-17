@@ -26,13 +26,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Media;
 
 namespace Aura
 {
@@ -100,6 +99,8 @@ namespace Aura
 		private static readonly Stack<Flyout> Flyouts = new Stack<Flyout> ();
 		private static Flyout CurrentFlyout;
 		private static FrameworkElement TargetElement;
+		private static CoreApplicationViewTitleBar titleBar;
+		private static double FlyoutInset = 30;
 
 		private static Flyout GetFlyout (string name, object context)
 		{
@@ -117,15 +118,23 @@ namespace Aura
 				((FrameworkElement)oldFlyout.Content).DataContext = null;
 			}
 
+			if (titleBar == null) {
+				titleBar = CoreApplication.GetCurrentView ().TitleBar;
+				UpdateInset ();
+				titleBar.LayoutMetricsChanged += (o, e) => UpdateInset ();
+			}
+
 			CurrentFlyout = newFlyout;
 			if (newFlyout != null) {
 				newFlyout.Closed += OnFlyoutClosed;
 				CurrentFlyout.ShowAt (TargetElement, new FlyoutShowOptions {
-					Position = new Point (TargetElement.ActualWidth / 2, 40),
+					Position = new Point (TargetElement.ActualWidth / 2, FlyoutInset + 40),
 					ShowMode = FlyoutShowMode.Transient
 				});
 			}
 		}
+
+		private static void UpdateInset() => FlyoutInset = (titleBar.Height > 0) ? titleBar.Height : FlyoutInset;
 
 		private static void OnFlyoutClosed (object sender, object e)
 		{
