@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-using Aura.Data;
-
-namespace Aura.Service.Messages
+namespace Aura.Data
 {
-	public class PrepareLayerMessage
+	public class Layer
+		: CampaignElement
 	{
-		public Layer Layer
+		public IList<EnvironmentElement> Elements
 		{
 			get;
 			set;

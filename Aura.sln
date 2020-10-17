@@ -20,6 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura.Data", "Aura.Data\Aura.Data.csproj", "{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -160,6 +162,26 @@ Global
 		{989FD3C3-88D9-437B-AC9F-532990245F57}.Release|x64.Build.0 = Release|Any CPU
 		{989FD3C3-88D9-437B-AC9F-532990245F57}.Release|x86.ActiveCfg = Release|Any CPU
 		{989FD3C3-88D9-437B-AC9F-532990245F57}.Release|x86.Build.0 = Release|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Debug|ARM.Build.0 = Debug|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Debug|x64.Build.0 = Debug|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Debug|x86.Build.0 = Debug|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Release|ARM.ActiveCfg = Release|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Release|ARM.Build.0 = Release|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Release|ARM64.Build.0 = Release|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Release|x64.ActiveCfg = Release|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Release|x64.Build.0 = Release|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Release|x86.ActiveCfg = Release|Any CPU
+		{E51C1DD9-D483-408B-BEC8-D2A7B0470ECC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

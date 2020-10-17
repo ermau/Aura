@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Aura
 {
-	internal class Campaign
+	public class Campaign
 		: NamedElement
 	{
 		public Guid Secret

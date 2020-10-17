@@ -5,4 +5,8 @@
     <RootNamespace>Aura.Service</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Aura.Data\Aura.Data.csproj" />
+  </ItemGroup>
+
 </Project>

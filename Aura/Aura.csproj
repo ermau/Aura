@@ -226,25 +226,29 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
-      <Version>6.2.9</Version>
+      <Version>6.2.10</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Toolkit.Uwp.UI.Controls">
-      <Version>6.0.0</Version>
+      <Version>7.0.0-preview3</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.UI.Xaml">
-      <Version>2.4.0</Version>
+      <Version>2.5.0-prerelease.200923002</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.3</Version>
     </PackageReference>
     <PackageReference Include="System.Composition">
-      <Version>1.4.0</Version>
+      <Version>5.0.0-rc.2.20475.5</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Aura.Core\Aura.Core.csproj">
       <Project>{6e52b6c9-3647-4d17-b2d0-2d606c6b0297}</Project>
       <Name>Aura.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Aura.Data\Aura.Data.csproj">
+      <Project>{e51c1dd9-d483-408b-bec8-d2a7b0470ecc}</Project>
+      <Name>Aura.Data</Name>
     </ProjectReference>
     <ProjectReference Include="..\Aura.Hue\Aura.Hue.csproj">
       <Project>{5b44c21e-95f7-4b96-a923-4149b742a296}</Project>
