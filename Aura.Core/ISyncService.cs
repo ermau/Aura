@@ -37,7 +37,7 @@ namespace Aura
 		Task<IReadOnlyList<NamedElement>> FindElementsByNameAsync (string search);
 
 		Task<IReadOnlyList<T>> GetElementsAsync<T>() where T : Element;
-		Task SaveElementAsync (Element element);
+		Task<T> SaveElementAsync<T> (T element) where T : Element;
 		Task DeleteElementAsync (Element element);
 	}
 }

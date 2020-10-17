@@ -80,14 +80,15 @@ namespace Aura.Services
 			}
 		}
 
-		public async Task SaveElementAsync (Element element)
+		public async Task<T> SaveElementAsync<T> (T element)
+			where T : Element
 		{
 			if (element is null)
 				throw new ArgumentNullException (nameof (element));
 
 			Type elementType = element.GetType ();
 
-			await this.sync.WaitAsync ().ConfigureAwait (false);
+			await this.sync.WaitAsync ();
 			try {
 				if (!this.elements.TryGetValue (GetSimpleTypeName (elementType), out var items)) {
 					this.elements[GetSimpleTypeName (elementType)] = items = new Dictionary<string, object> ();
@@ -97,6 +98,7 @@ namespace Aura.Services
 				items[element.Id] = element;
 				await SaveAsync();
 				Messenger.Default.Send (new ElementsChangedMessage (elementType));
+				return element;
 			} finally {
 				this.sync.Release ();
 			}
@@ -109,14 +111,14 @@ namespace Aura.Services
 
 			Type elementType = element.GetType ();
 
-			await this.sync.WaitAsync ().ConfigureAwait (false);
+			await this.sync.WaitAsync ();
 			try {
 				if (!this.elements.TryGetValue (GetSimpleTypeName (elementType), out var items)) {
 					return;
 				}
 
 				if (items.Remove (element.Id)) {
-					await SaveAsync ().ConfigureAwait (false);
+					await SaveAsync ();
 					Messenger.Default.Send (new ElementsChangedMessage (elementType));
 				}
 			} finally {
@@ -138,17 +140,26 @@ namespace Aura.Services
 		{
 			this.sync.Wait ();
 			return Task.Run (async () => {
+				Stream stream = null;
+
 				try {
 					StorageFile db = await RoamingFolder.GetFileAsync (DbFilename);
-					Stream stream = (await db.OpenReadAsync ()).AsStreamForRead();
+					stream = (await db.OpenReadAsync ()).AsStreamForRead ();
 
 					var serializer = new JsonSerializer {
 						TypeNameHandling = TypeNameHandling.Auto
 					};
 
-					this.elements = (Dictionary<string, Dictionary<string, object>>)serializer.Deserialize (new StreamReader (stream), typeof(Dictionary<string, Dictionary<string, object>>));
+					this.elements = (Dictionary<string, Dictionary<string, object>>)serializer.Deserialize (new StreamReader (stream), typeof (Dictionary<string, Dictionary<string, object>>));
 				} catch (FileNotFoundException) {
 					this.elements = new Dictionary<string, Dictionary<string, object>> ();
+				} catch (JsonSerializationException) {
+					this.elements = new Dictionary<string, Dictionary<string, object>> ();
+					if (stream != null)
+						stream.Dispose ();
+
+					await RoamingFolder.RenameAsync (DbFilename + ".corrupt");
+					await SaveAsync ();
 				} finally {
 					this.sync.Release ();
 				}
