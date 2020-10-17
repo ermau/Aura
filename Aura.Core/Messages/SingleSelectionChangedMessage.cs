@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Aura.Messages
 {
@@ -20,6 +21,21 @@ namespace Aura.Messages
 		public NamedElement SelectedElement
 		{
 			get;
+		}
+	}
+
+	internal class SingleSelectionPreviewChangeMessage
+		: SingleSelectionChangedMessage
+	{
+		public SingleSelectionPreviewChangeMessage (Type type, NamedElement selectedElement)
+			: base (type, selectedElement)
+		{
+		}
+
+		public Task<bool> Canceled
+		{
+			get;
+			set;
 		}
 	}
 }

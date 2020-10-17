@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -37,9 +36,7 @@ namespace Aura
 				if (this.selectedElement == value)
 					return;
 
-				this.selectedElement = value;
-				OnPropertyChanged ();
-				Messenger.Default.Send (new SingleSelectionChangedMessage (typeof (T), value));
+				SetElement (value);
 			}
 		}
 
@@ -69,12 +66,34 @@ namespace Aura
 		{
 			var items = (await SyncService.GetElementsAsync<T> ()).OrderBy (e => e.Name).ToList();
 
-			SelectedElement = items?.FirstOrDefault () ?? NoSelectionElement;
+			T existingElement = default;
+			if (SelectedElement != default) {
+				existingElement = items.FirstOrDefault (i => i.Id == SelectedElement.Id);
+			}
+
+			SelectedElement = existingElement ?? items.FirstOrDefault () ?? NoSelectionElement;
 			this.elements.Reset (items);
 		}
 
 		private readonly ObservableCollectionEx<T> elements = new ObservableCollectionEx<T> ();
 		private T selectedElement;
+
+		private async void SetElement (T element)
+		{
+			var msg = new SingleSelectionPreviewChangeMessage (typeof (T), element);
+			Messenger.Default.Send (msg);
+
+			if (msg.Canceled != null) {
+				if (await msg.Canceled) {
+					Messenger.Default.Send (new SingleSelectionChangedMessage (typeof (T), this.selectedElement));
+					return;
+				}
+			}
+
+			this.selectedElement = element;
+			OnPropertyChanged (nameof(SelectedElement));
+			Messenger.Default.Send (new SingleSelectionChangedMessage (typeof (T), element));
+		}
 
 		private async void LoadElementsAsync ()
 		{
