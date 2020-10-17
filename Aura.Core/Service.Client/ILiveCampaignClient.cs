@@ -11,5 +11,7 @@ namespace Aura.Service.Client
 		Task<RemoteCampaign> CreateCampaignAsync (string name, CancellationToken cancelToken);
 		Task<RemoteCampaign> GetCampaignDetailsAsync (string id, CancellationToken cancelToken);
 		Task<RemoteCampaign> GetCampaignDetailsAsync (Uri uri, CancellationToken cancelToken);
+
+		Task<ICampaignConnection> ConnectToCampaignAsync (string id, IAsyncServiceProvider serviceProvider, CancellationToken cancelToken);
 	}
 }

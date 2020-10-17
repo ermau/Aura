@@ -6,10 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR.Client;
-
-using Aura.Service.Messages;
 using Aura.Service.Client;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
+
 
 namespace Aura.Service
 {
@@ -42,6 +42,14 @@ namespace Aura.Service
 		}
 
 		public static bool IsLiveUri (Uri uri) => uri.AbsoluteUri.StartsWith (baseUri);
+
+		public async Task StartAsync (IAsyncServiceProvider services)
+		{
+			if (services is null)
+				throw new ArgumentNullException (nameof (services));
+
+			this.sync = await services.GetServiceAsync<ISyncService> ();
+		}
 
 		public async Task<RemoteCampaign> CreateCampaignAsync (string name, CancellationToken cancelToken)
 		{
@@ -79,39 +87,38 @@ namespace Aura.Service
 			if (string.IsNullOrWhiteSpace (id))
 				throw new ArgumentException ("message", nameof (id));
 
-			return GetCampaignDetailsAsync (new Uri (baseUri + "campaigns/" + id), cancelToken);
+			string url = id;
+			if (!IsLiveUri (id))
+				url = baseUri + "campaigns/" + id;
+
+			return GetCampaignDetailsAsync (new Uri (url), cancelToken);
 		}
 
-		public async Task ConnectToCampaignAsync (string id, CancellationToken cancelToken = default)
+		public Task<ICampaignConnection> ConnectToCampaignAsync (string id, IAsyncServiceProvider services, CancellationToken cancelToken)
 		{
 			if (id == null)
 				throw new ArgumentNullException (nameof (id));
+			if (services is null)
+				throw new ArgumentNullException (nameof (services));
 			if (!Guid.TryParse (id, out Guid campaignId))
 				throw new ArgumentException (nameof (id));
 
-			this.connection = new HubConnectionBuilder ()
-				.WithUrl (baseUri + "/campaigns/" + id)
+			HubConnection connection = new HubConnectionBuilder ()
+				.WithUrl (baseUri + "CampaignHub")
+				.WithAutomaticReconnect ()
+				/*.ConfigureLogging(logging => {
+					logging.SetMinimumLevel (LogLevel.Debug);
+					logging.AddDebug ();
+				})*/
 				.Build ();
 
-			this.connection.On<PrepareLayerMessage> ("PrepareLayer", OnPrepareLayer);
-			this.connection.On<PlayLayerMessage> ("PlayLayer", OnPlayLayer);
-			
-			await this.connection.StartAsync (cancelToken);
+			var campaignConnection = new CampaignConnection (id, connection, services);
+			return campaignConnection.StartAsync (cancelToken);
 		}
-		//http://localhost:7071/api/campaigns/ed2fbdad-2ce1-43a0-9ce0-31e3e6d3ed14
+
 		private const string baseUri = "http://localhost:7071/api/";
 		private readonly HttpClient client = new HttpClient ();
-		
-		private HubConnection connection;
 
-		private void OnPrepareLayer (PrepareLayerMessage msg)
-		{
-
-		}
-
-		private void OnPlayLayer (PlayLayerMessage msg)
-		{
-
-		}
+		private ISyncService sync;
 	}
 }
