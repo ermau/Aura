@@ -70,7 +70,7 @@ namespace Aura
 			OnPlaySpacesChanged (null, new NotifyCollectionChangedEventArgs (NotifyCollectionChangedAction.Reset));
 		}
 
-		private void UpdateMenu<T> (NavigationViewItem navItem, IconElement elementIcon, NotifyCollectionChangedEventArgs e, SingleSelectionManager<T> manager, T emptyElement = null)
+		private void UpdateMenu<T> (NavigationViewItem navItem, Symbol symbol, NotifyCollectionChangedEventArgs e, SingleSelectionManager<T> manager, T emptyElement = null)
 			where T : NamedElement
 		{
 			var menu = (MenuFlyout)navItem.ContextFlyout;
@@ -95,7 +95,7 @@ namespace Aura
 			foreach (T element in manager.Elements) {
 				var radio = new Microsoft.UI.Xaml.Controls.RadioMenuFlyoutItem {
 					DataContext = new SingleSelectionItemViewModel<T> (manager, element),
-					Icon = elementIcon,
+					Icon = new SymbolIcon (symbol)
 				};
 
 				radio.SetBinding (MenuFlyoutItem.TextProperty, new Binding { Path = new PropertyPath ("Name"), Mode = BindingMode.OneTime });
@@ -108,13 +108,13 @@ namespace Aura
 		private async void OnPlaySpacesChanged (object sender, NotifyCollectionChangedEventArgs e)
 		{
 			await Dispatcher.RunAsync (CoreDispatcherPriority.Normal, () =>
-				UpdateMenu (this.playspacesNav, new SymbolIcon (Symbol.Home), e, this.vm.PlaySpaces));
+				UpdateMenu (this.playspacesNav, Symbol.Home, e, this.vm.PlaySpaces));
 		}
 
 		private async void OnCampaignsChanged (object sender, NotifyCollectionChangedEventArgs e)
 		{
 			await Dispatcher.RunAsync (CoreDispatcherPriority.Normal, () =>
-				UpdateMenu (this.campaignsNav, new SymbolIcon (Symbol.World), e, this.vm.Campaigns, new Campaign { Name = "No campaigns" }));
+				UpdateMenu (this.campaignsNav, Symbol.World, e, this.vm.Campaigns, new Campaign { Name = "No campaigns" }));
 		}
 
 		private void UpdateTitleBarLayout (CoreApplicationViewTitleBar title)
