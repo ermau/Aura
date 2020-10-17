@@ -16,7 +16,11 @@ namespace Aura
 
 		public object Convert (object value, Type targetType, object parameter, string language)
 		{
-			return (!Invert && ((value as bool?) ?? false)) ? Visibility.Visible : Visibility.Collapsed;
+			bool v = (value as bool?) ?? false;
+			if (v && !Invert || !v && Invert)
+				return Visibility.Visible;
+
+			return Visibility.Collapsed;
 		}
 
 		public object ConvertBack (object value, Type targetType, object parameter, string language)
