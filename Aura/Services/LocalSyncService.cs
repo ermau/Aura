@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Aura.Data;
 using Aura.Messages;
 
 using GalaSoft.MvvmLight.Messaging;
@@ -19,126 +19,18 @@ namespace Aura.Services
 {
 	[Export (typeof(ISyncService)), Shared]
 	internal class LocalSyncService
-		: ISyncService
+		: JsonSyncServiceBase, ISyncService
 	{
-		public LocalSyncService()
-		{
-			LoadAsync ();
-		}
-
-		public async Task<T> GetElementByIdAsync<T> (string id) where T : Element
-		{
-			await this.sync.WaitAsync ();
-			try {
-				if (!this.elements.TryGetValue (GetSimpleTypeName (typeof (T)), out var items))
-					return null;
-
-				if (!items.TryGetValue (id, out object value))
-					return null;
-
-				return (T)value;
-			} finally {
-				this.sync.Release ();
-			}
-		}
-
-		public Task<IReadOnlyList<NamedElement>> FindElementsByNameAsync (string search)
-		{
-			return Task.Run<IReadOnlyList<NamedElement>> (async () => {
-				Type nameable = typeof (NamedElement);
-
-				await this.sync.WaitAsync ();
-				try {
-					var found = new List<NamedElement> ();
-					foreach (var kvp in this.elements) {
-						if (!nameable.IsAssignableFrom (Type.GetType (kvp.Key)))
-							continue;
-
-						foreach (NamedElement e in kvp.Value.Values) {
-							if (e.Name.Contains (search, StringComparison.CurrentCultureIgnoreCase))
-								found.Add (e);
-						}
-					}
-
-					return found;
-				} finally {
-					this.sync.Release ();
-				}
-			});
-		}
-
-		public async Task<IReadOnlyList<T>> GetElementsAsync<T> () where T : Element
-		{
-			await this.sync.WaitAsync ();
-			try {
-				if (!this.elements.TryGetValue (GetSimpleTypeName (typeof (T)), out var items))
-					return Array.Empty<T> ();
-
-				return items.Values.Cast<T>().ToList ();
-			} finally {
-				this.sync.Release ();
-			}
-		}
-
-		public async Task<T> SaveElementAsync<T> (T element)
-			where T : Element
-		{
-			if (element is null)
-				throw new ArgumentNullException (nameof (element));
-
-			Type elementType = element.GetType ();
-
-			await this.sync.WaitAsync ();
-			try {
-				if (!this.elements.TryGetValue (GetSimpleTypeName (elementType), out var items)) {
-					this.elements[GetSimpleTypeName (elementType)] = items = new Dictionary<string, object> ();
-				}
-
-				element.Id = element.Id ?? Guid.NewGuid ().ToString ();
-				items[element.Id] = element;
-				await SaveAsync();
-				Messenger.Default.Send (new ElementsChangedMessage (elementType));
-				return element;
-			} finally {
-				this.sync.Release ();
-			}
-		}
-
-		public async Task DeleteElementAsync (Element element)
-		{
-			if (element is null)
-				throw new ArgumentNullException (nameof (element));
-
-			Type elementType = element.GetType ();
-
-			await this.sync.WaitAsync ();
-			try {
-				if (!this.elements.TryGetValue (GetSimpleTypeName (elementType), out var items)) {
-					return;
-				}
-
-				if (items.Remove (element.Id)) {
-					await SaveAsync ();
-					Messenger.Default.Send (new ElementsChangedMessage (elementType));
-				}
-			} finally {
-				this.sync.Release ();
-			}
-		}
-
 		protected virtual StorageFolder RoamingFolder
 		{
 			get { return ApplicationData.Current.RoamingFolder; }
 		}
 
-		private readonly SemaphoreSlim sync = new SemaphoreSlim (1);
-		private Dictionary<string, Dictionary<string, object>> elements;
-
 		private const string DbFilename = "db.json";
 
-		private Task LoadAsync()
+		protected override Task<IDictionary<string, IDictionary<string, object>>> LoadAsync()
 		{
-			this.sync.Wait ();
+			Sync.Wait ();
 			return Task.Run (async () => {
 				Stream stream = null;
 
@@ -150,26 +42,27 @@ namespace Aura.Services
 						TypeNameHandling = TypeNameHandling.Auto
 					};
 
-					this.elements = (Dictionary<string, Dictionary<string, object>>)serializer.Deserialize (new StreamReader (stream), typeof (Dictionary<string, Dictionary<string, object>>));
+					return (IDictionary<string, IDictionary<string, object>>)serializer.Deserialize (new StreamReader (stream), typeof (IDictionary<string, IDictionary<string, object>>));
 				} catch (FileNotFoundException) {
-					this.elements = new Dictionary<string, Dictionary<string, object>> ();
+					return new Dictionary<string, IDictionary<string, object>> ();
 				} catch (JsonSerializationException) {
-					this.elements = new Dictionary<string, Dictionary<string, object>> ();
 					if (stream != null)
 						stream.Dispose ();
 
 					await RoamingFolder.RenameAsync (DbFilename + ".corrupt");
 					await SaveAsync ();
+
+					return new Dictionary<string, IDictionary<string, object>> ();
 				} finally {
-					this.sync.Release ();
+					Sync.Release ();
 				}
 			});
 		}
 
-		private async Task SaveAsync()
+		protected override async Task SaveAsync(IDictionary<string, IDictionary<string, object>> data)
 		{
 			Task<string> serialize = Task.Run (() => {
-				return JsonConvert.SerializeObject (this.elements, new JsonSerializerSettings {
+				return JsonConvert.SerializeObject (data, new JsonSerializerSettings {
 					TypeNameHandling = TypeNameHandling.Auto,
 					Formatting = Formatting.Indented
 				});
@@ -180,16 +73,6 @@ namespace Aura.Services
 			using (var writer = new StreamWriter (stream)) {
 				await writer.WriteAsync (await serialize);
 			}
-		}
-
-		private string GetSimpleTypeName (object instance) => GetSimpleTypeName (instance?.GetType ());
-
-		private string GetSimpleTypeName (Type type)
-		{
-			if (type == null)
-				return null;
-
-			return $"{type.FullName}, {type.Assembly.GetName ().Name}";
 		}
 	}
 }
