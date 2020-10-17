@@ -24,7 +24,7 @@ namespace Aura
 	{
 		public SettingsPage ()
 		{
-			this.InitializeComponent ();
+			InitializeComponent ();
 		}
 	}
 }

@@ -9,9 +9,14 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
 	<ScrollViewer>
-		<StackPanel Padding="20">
+		<StackPanel Padding="20,0,20,0">
 			<TextBlock Style="{ThemeResource HeaderTextBlockStyle}">Settings</TextBlock>
-			<ToggleSwitch>Auto-discover play space</ToggleSwitch>
+			<TextBlock Style="{ThemeResource TitleTextBlockStyle}">Appearance</TextBlock>
+			<ToggleSwitch IsOn="True">Spoiler free mode</ToggleSwitch>
+			<ToggleSwitch IsOn="True">Visualize playback</ToggleSwitch>
+			<TextBlock Style="{ThemeResource TitleTextBlockStyle}">Play Spaces</TextBlock>
+			<ToggleSwitch IsOn="True">Auto-switch play space</ToggleSwitch>
+			
 		</StackPanel>
 	</ScrollViewer>
 </Page>
