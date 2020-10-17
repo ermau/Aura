@@ -119,6 +119,9 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="AudioElementPreview.xaml.cs">
+      <DependentUpon>AudioElementPreview.xaml</DependentUpon>
+    </Compile>
     <Compile Include="BoolVisibilityConverter.cs" />
     <Compile Include="CreateCampaignDialog.xaml.cs">
       <DependentUpon>CreateCampaignDialog.xaml</DependentUpon>
@@ -146,11 +149,11 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PlaybackPreview.xaml.cs">
+      <DependentUpon>PlaybackPreview.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PlaylistsPage.xaml.cs">
       <DependentUpon>PlaylistsPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="PlayPage.xaml.cs">
-      <DependentUpon>PlayPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\LocalSyncService.cs" />
@@ -179,6 +182,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="AudioElementPreview.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="CreateCampaignDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -211,11 +218,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="PlaylistsPage.xaml">
+    <Page Include="PlaybackPreview.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PlayPage.xaml">
+    <Page Include="PlaylistsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
