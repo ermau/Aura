@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Aura.Data;
 using Aura.Messages;
 
 using GalaSoft.MvvmLight.Messaging;
@@ -47,13 +48,34 @@ namespace Aura
 			get;
 		}
 
-		protected void AddElement (T element)
+		protected async Task ReloadElementsAsync()
+		{
+			Task<string> selectionTask = null;
+			string existingId = SelectedElement?.Id;
+			if (existingId == null) {
+				selectionTask = GetRecordedSelectionAsycnc ();
+			}
+
+			var items = (await SyncService.GetElementsAsync<T> ()).OrderBy (e => e.Name).ToList();
+
+			T existingElement = default;
+			if (selectionTask != null)
+				existingId = await selectionTask;
+
+			if (existingId != null)
+				existingElement = items.FirstOrDefault (i => i.Id == existingId);
+
+			SelectedElement = existingElement ?? items.FirstOrDefault () ?? NoSelectionElement;
+			this.elements.Reset (items);
+		}
+
+		protected void NotifyAddElement (T element)
 		{
 			// TODO: Add with sort
 			LoadElementsAsync ();
 		}
 
-		protected void RemoveElement (T element)
+		protected void NotifyRemoveElement (T element)
 		{
 			if (!this.elements.Remove (element)) {
 				T existingElement = this.elements.FirstOrDefault (e => e.Id == element.Id);
@@ -62,21 +84,32 @@ namespace Aura
 			}
 		}
 
-		protected async Task ReloadElementsAsync()
-		{
-			var items = (await SyncService.GetElementsAsync<T> ()).OrderBy (e => e.Name).ToList();
-
-			T existingElement = default;
-			if (SelectedElement != default) {
-				existingElement = items.FirstOrDefault (i => i.Id == SelectedElement.Id);
-			}
-
-			SelectedElement = existingElement ?? items.FirstOrDefault () ?? NoSelectionElement;
-			this.elements.Reset (items);
-		}
-
 		private readonly ObservableCollectionEx<T> elements = new ObservableCollectionEx<T> ();
 		private T selectedElement;
+		private SingleSelectionElement selectionElement;
+
+		private async Task<string> GetRecordedSelectionAsycnc()
+		{
+			var selections = await SyncService.GetElementsAsync<SingleSelectionElement> ();
+			string typeName = typeof (T).GetSimpleTypeName ();
+			this.selectionElement = selections.FirstOrDefault (s => s.Type == typeName);
+			return this.selectionElement?.SelectionId;
+		}
+
+		private async Task SaveSelectionAsync()
+		{
+			SingleSelectionElement selection = this.selectionElement;
+			if (selection == null) {
+				selection = new SingleSelectionElement() {
+					SelectionId = SelectedElement?.Id,
+					Type = typeof(T).GetSimpleTypeName()
+				};
+			} else {
+				selection = selection with { SelectionId = SelectedElement?.Id };
+			}
+
+			this.selectionElement = await SyncService.SaveElementAsync (selection);
+		}
 
 		private async void SetElement (T element)
 		{
@@ -93,6 +126,7 @@ namespace Aura
 			this.selectedElement = element;
 			OnPropertyChanged (nameof(SelectedElement));
 			Messenger.Default.Send (new SingleSelectionChangedMessage (typeof (T), element));
+			await SaveSelectionAsync ();
 		}
 
 		private async void LoadElementsAsync ()
