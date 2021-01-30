@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
+using Aura.Data;
+
 namespace Aura.Messages
 {
 	internal class SingleSelectionChangedMessage

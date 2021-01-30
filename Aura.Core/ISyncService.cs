@@ -28,6 +28,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Aura.Data;
+
 namespace Aura
 {
 	internal interface ISyncService

@@ -4,9 +4,10 @@ using System.Composition.Hosting;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Aura.Messages;
-
 using GalaSoft.MvvmLight.Messaging;
+
+using Aura.Data;
+using Aura.Messages;
 
 namespace Aura
 {
@@ -40,7 +41,12 @@ namespace Aura
 			await playspaces.Loading.ConfigureAwait (false);
 
 			if (playspaces.Elements.Count == 0) {
-				var home = new PlaySpace { Name = "Home" };
+				IAudioService audioService = await services.GetServiceAsync<IAudioService> ();
+
+				var home = new PlaySpaceElement {
+					Name = "Home",
+					Services = new [] { audioService.GetType().GetSimpleTypeName() }
+				};
 				ISyncService sync = await services.GetServiceAsync<ISyncService> ().ConfigureAwait (false);
 				await sync.SaveElementAsync (home).ConfigureAwait (false);
 				await playspaces.Loading.ConfigureAwait (false);

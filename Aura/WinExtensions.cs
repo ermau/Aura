@@ -51,21 +51,26 @@ namespace Aura
 			return null;
 		}
 
-		public static async Task<string> TryGetJoinLinkAsync (this DataPackageView self)
+		public static bool CouldHaveLink(this DataPackageView self)
+		{
+			return (self.AvailableFormats.Contains (StandardDataFormats.Text) || self.AvailableFormats.Contains (StandardDataFormats.WebLink));
+		}
+
+		public static async Task<(string Url, bool IsConnect)> TryGetLinkAsync (this DataPackageView self)
 		{
 			if (self.AvailableFormats.Contains (StandardDataFormats.Text)) {
 				string text = await self.GetTextAsync ();
-				if (LiveCampaignClient.IsJoinUri (text))
-					return text;
+				if (LiveCampaignClient.IsLiveUri (text))
+					return (text, LiveCampaignClient.IsConnectUri(text));
 			}
 
 			if (self.AvailableFormats.Contains (StandardDataFormats.WebLink)) {
 				Uri uri = await self.GetWebLinkAsync ();
 				if (LiveCampaignClient.IsLiveUri (uri))
-					return uri.ToString ();
+					return (uri.ToString (), LiveCampaignClient.IsConnectUri (uri));
 			}
 
-			return null;
+			return (null, false);
 		}
 	}
 }

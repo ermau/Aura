@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
+
+using Aura.Data;
 
 namespace Aura
 {
@@ -30,7 +29,9 @@ namespace Aura
 		}
 
 		private static readonly Dictionary<Type, (Symbol, string)> IconMap = new Dictionary<Type, (Symbol, string)> {
-			{ typeof(Campaign), (Symbol.World, null) }
+			{ typeof(CampaignElement), (Symbol.World, null) },
+			{ typeof(PlaySpaceElement), (Symbol.Home, null) },
+			{ typeof(EnvironmentElement), (Symbol.Preview, null) }
 		};
 	}
 }

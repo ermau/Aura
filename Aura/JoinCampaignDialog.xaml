@@ -11,7 +11,8 @@
     PrimaryButtonText="Join"
     SecondaryButtonText="Cancel"
 	PrimaryButtonCommand="{Binding JoinCommand,Mode=OneTime}"
-	SecondaryButtonClick="OnCancel">
+	SecondaryButtonClick="OnCancel"
+	Background="{ThemeResource SystemControlAcrylicWindowBrush}">
 
     <Grid VerticalAlignment="Center" Width="400">
 		<Grid.RowDefinitions>

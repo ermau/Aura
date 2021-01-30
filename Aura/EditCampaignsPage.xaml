@@ -17,14 +17,18 @@
 		
 		<TextBlock Margin="10" Style="{ThemeResource TitleTextBlockStyle}">Campaigns</TextBlock>
 		
-		<ListView Margin="10" Grid.Row="1" ItemsSource="{Binding Campaigns}" SelectedItem="{Binding SelectedCampaign,Mode=TwoWay}">
+		<ListView Margin="10" Grid.Row="1" ItemsSource="{Binding Campaigns}" SelectedItem="{Binding SelectedCampaign,Mode=TwoWay}" Background="Transparent">
+			<ListView.ItemContainerStyle>
+				<Style TargetType="ListViewItem">
+					<Setter Property="HorizontalContentAlignment" Value="Stretch" />
+					<Setter Property="VerticalContentAlignment" Value="Stretch" />
+				</Style>
+			</ListView.ItemContainerStyle>
 			<ListView.ItemTemplate>
 				<DataTemplate>
 					<Grid>
 						<Grid.ContextFlyout>
 							<MenuFlyout>
-								<!--<MenuFlyoutItem Icon="Edit">Rename</MenuFlyoutItem>!-->
-								<!--<MenuFlyoutItem Icon="Delete" Command="{Binding DeleteCampaign}">Delete</MenuFlyoutItem>!-->
 								<MenuFlyoutItem Icon="Delete" Command="{Binding DeleteCampaign}">Leave</MenuFlyoutItem>
 							</MenuFlyout>
 						</Grid.ContextFlyout>
@@ -42,7 +46,7 @@
 
 		<CommandBar Grid.Row="2">
 			<CommandBar.PrimaryCommands>
-				<AppBarButton Icon="Add" Label="Add" />
+				<AppBarButton Icon="Add" Label="Add" Command="{Binding CreateCampaign,Mode=OneTime}" />
 				<AppBarButton Icon="Link" Label="Join" Command="{Binding JoinCampaign,Mode=OneTime}" />
 				<AppBarButton Icon="Delete" Label="Delete" Command="{Binding DeleteCampaign,Mode=OneTime}" />
 			</CommandBar.PrimaryCommands>

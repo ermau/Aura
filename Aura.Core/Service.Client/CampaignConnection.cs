@@ -62,6 +62,20 @@ namespace Aura.Service.Client
 			throw new Exception ("Unknown error");
 		}
 
+		public async Task JoinGameAsync (CancellationToken cancellationToken)
+		{
+			JoinGameResult result = await this.connection.InvokeAsync<JoinGameResult> ("JoinGame", new JoinGameMessage {
+				CampaignId = this.campaignId
+			}, cancellationToken).ConfigureAwait (false);
+
+			if (result == JoinGameResult.Success)
+				return;
+			if (result == JoinGameResult.CampaignNotFound)
+				throw new CampaignNotFoundException ();
+
+			throw new Exception ("Unknown error");
+		}
+
 		private void OnUpdateParticipants (UpdateParticipantsMessage msg)
 		{
 			if (msg.Participants == null)

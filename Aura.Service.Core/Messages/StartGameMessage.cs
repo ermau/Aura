@@ -4,14 +4,17 @@ using System.Text;
 
 namespace Aura.Service.Messages
 {
-	public class StartGameMessage
+	public class JoinGameMessage
 	{
 		public string CampaignId
 		{
 			get;
 			set;
 		}
-
+	}
+	public class StartGameMessage
+		: JoinGameMessage
+	{
 		public string CampaignSecret
 		{
 			get;

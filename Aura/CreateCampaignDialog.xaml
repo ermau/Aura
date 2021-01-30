@@ -6,18 +6,21 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-	 Background="{ThemeResource SystemControlBackgroundBaseLowBrush}"
 	DefaultButton="Primary"
     PrimaryButtonText="Create campaign"
-    SecondaryButtonText="Cancel">
+	PrimaryButtonCommand="{Binding CreateCampaign,Mode=OneTime}"
+    SecondaryButtonText="Cancel"
+	Background="{ThemeResource SystemControlAcrylicWindowBrush}">
 
-	<Grid HorizontalAlignment="Center" Width="500">
+	<Grid HorizontalAlignment="Center" Width="500" Padding="1">
 		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
 			<RowDefinition Height="Auto" />
 			<RowDefinition Height="Auto" />
 		</Grid.RowDefinitions>
 
-		<FontIcon FontSize="200" Glyph="&#xE909;" Margin="0,24,0,24" />
-		<TextBox Grid.Row="1" PlaceholderText="Name this campaign" FontSize="32" HorizontalTextAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" />
+		<FontIcon x:Name="icon" FontSize="200" Glyph="&#xE909;" Margin="0,24,0,24" />
+		<TextBox Grid.Row="1" PlaceholderText="Name this campaign" FontSize="32" HorizontalTextAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Text="{Binding Input,Mode=TwoWay}" />
+		<ToggleSwitch Grid.Row="2" OnContent="Online" OffContent="Offline" IsOn="{Binding IsOnline,Mode=TwoWay}" />
 	</Grid>
 </ContentDialog>

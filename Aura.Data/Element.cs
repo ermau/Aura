@@ -1,11 +1,13 @@
-﻿namespace Aura
+﻿namespace Aura.Data
 {
-	public abstract class Element
+	public abstract record Element
 	{
-		public string Id
+		public string Id;
+		public int Version;
+
+		public Element Update (string id = null)
 		{
-			get;
-			set;
+			return this with { Id = id ?? Id, Version = Version + 1 };
 		}
 	}
 }

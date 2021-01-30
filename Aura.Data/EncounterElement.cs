@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Aura
+namespace Aura.Data
 {
-	internal class PlaySpace
-		: NamedElement
+	public record EncounterElement
+		: CampaignChildElement
 	{
-		
 	}
 }

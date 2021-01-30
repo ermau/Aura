@@ -33,7 +33,7 @@ namespace Aura
 		private async Task TryPasteLinkAsync()
 		{
 			DataPackageView dataView = Clipboard.GetContent ();
-			string copiedUrl = await dataView.TryGetJoinLinkAsync ();
+			(string copiedUrl, _) = await dataView.TryGetLinkAsync ();
 			if (copiedUrl != null && String.IsNullOrEmpty (this.text.Text)) {
 				((JoinCampaignDialogViewModel)DataContext).Input = copiedUrl;
 			}

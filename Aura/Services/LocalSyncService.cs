@@ -34,22 +34,29 @@ namespace Aura.Services
 			return Task.Run (async () => {
 				Stream stream = null;
 
+				StorageFile db = null;
 				try {
-					StorageFile db = await RoamingFolder.GetFileAsync (DbFilename);
+					db = await RoamingFolder.GetFileAsync (DbFilename);
 					stream = (await db.OpenReadAsync ()).AsStreamForRead ();
 
 					var serializer = new JsonSerializer {
 						TypeNameHandling = TypeNameHandling.Auto
 					};
 
-					return (IDictionary<string, IDictionary<string, object>>)serializer.Deserialize (new StreamReader (stream), typeof (IDictionary<string, IDictionary<string, object>>));
+					var result = (IDictionary<string, IDictionary<string, object>>)serializer.Deserialize (new StreamReader (stream), typeof (IDictionary<string, IDictionary<string, object>>));
+					stream.Dispose ();
+
+					return result ?? new Dictionary<string, IDictionary<string, object>> ();
 				} catch (FileNotFoundException) {
 					return new Dictionary<string, IDictionary<string, object>> ();
 				} catch (JsonSerializationException) {
 					if (stream != null)
 						stream.Dispose ();
 
-					await RoamingFolder.RenameAsync (DbFilename + ".corrupt");
+					if (db != null) {
+						await db.RenameAsync (DbFilename + ".corrupt", NameCollisionOption.GenerateUniqueName);
+					}
+
 					await SaveAsync ();
 
 					return new Dictionary<string, IDictionary<string, object>> ();

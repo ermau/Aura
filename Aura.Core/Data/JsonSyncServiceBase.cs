@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Aura.Messages;
+
 using GalaSoft.MvvmLight.Messaging;
+
+using Aura.Messages;
 
 namespace Aura.Data
 {
@@ -21,7 +22,7 @@ namespace Aura.Data
 		{
 			await Sync.WaitAsync ();
 			try {
-				if (!this.elements.TryGetValue (GetSimpleTypeName (typeof (T)), out var items))
+				if (!this.elements.TryGetValue (typeof (T).GetSimpleTypeName(), out var items))
 					return null;
 
 				if (!items.TryGetValue (id, out object value))
@@ -46,7 +47,7 @@ namespace Aura.Data
 							continue;
 
 						foreach (NamedElement e in kvp.Value.Values) {
-							if (e.Name.Contains (search))
+							if (e.Name.IndexOf (search, StringComparison.CurrentCultureIgnoreCase) != -1)
 								found.Add (e);
 						}
 					}
@@ -62,7 +63,7 @@ namespace Aura.Data
 		{
 			await Sync.WaitAsync ();
 			try {
-				if (!this.elements.TryGetValue (GetSimpleTypeName (typeof (T)), out var items))
+				if (!this.elements.TryGetValue (typeof (T).GetSimpleTypeName(), out var items))
 					return Array.Empty<T> ();
 
 				return items.Values.Cast<T> ().ToList ();
@@ -81,11 +82,21 @@ namespace Aura.Data
 
 			await Sync.WaitAsync ();
 			try {
-				if (!this.elements.TryGetValue (GetSimpleTypeName (elementType), out var items)) {
-					this.elements[GetSimpleTypeName (elementType)] = items = new Dictionary<string, object> ();
+				if (!this.elements.TryGetValue (elementType.GetSimpleTypeName(), out var items)) {
+					this.elements[elementType.GetSimpleTypeName()] = items = new Dictionary<string, object> ();
 				}
 
-				element.Id = element.Id ?? Guid.NewGuid ().ToString ();
+				string newId = null;
+				if (element.Id != null && items.TryGetValue (element.Id, out object existing) && existing is T t) {
+					if (t.Version != element.Version) {
+						throw new InvalidOperationException ($"Attempted to updat against version {element.Version} but found existing version {t.Version} for {typeof (T)}");
+					}
+				} else {
+					newId = Guid.NewGuid ().ToString ();
+				}
+
+				element = (T)element.Update (newId);
+				
 				items[element.Id] = element;
 				await SaveAsync ();
 				Messenger.Default.Send (new ElementsChangedMessage (elementType));
@@ -104,7 +115,7 @@ namespace Aura.Data
 
 			await Sync.WaitAsync ();
 			try {
-				if (!this.elements.TryGetValue (GetSimpleTypeName (elementType), out var items)) {
+				if (!this.elements.TryGetValue (elementType.GetSimpleTypeName(), out var items)) {
 					return;
 				}
 
@@ -135,14 +146,6 @@ namespace Aura.Data
 		private async void Load()
 		{
 			this.elements = await LoadAsync ();
-		}
-
-		private string GetSimpleTypeName (Type type)
-		{
-			if (type == null)
-				return null;
-
-			return $"{type.FullName}, {type.Assembly.GetName ().Name}";
 		}
 	}
 }

@@ -13,7 +13,7 @@ using GalaSoft.MvvmLight.Command;
 namespace Aura.ViewModels
 {
 	internal class JoinCampaignDialogViewModel
-		: ViewModelBase
+		: InputDialogViewModel
 	{
 		public JoinCampaignDialogViewModel (ILiveCampaignClient liveClient)
 		{
@@ -21,50 +21,10 @@ namespace Aura.ViewModels
 			this.liveClient = liveClient ?? throw new ArgumentNullException (nameof (liveClient));
 		}
 
-		public string Input
-		{
-			get => this.input;
-			set
-			{
-				if (this.input == value)
-					return;
-
-				this.input = value;
-				RaisePropertyChanged ();
-				this.join.RaiseCanExecuteChanged ();
-			}
-		}
-
 		public ICommand JoinCommand => this.join;
 
-		public bool IsBusy
-		{
-			get => this.isBusy;
-			set
-			{
-				if (this.isBusy == value)
-					return;
+		protected override RelayCommand Command => this.join;
 
-				this.isBusy = false;
-				RaisePropertyChanged ();
-			}
-		}
-
-		public string Error
-		{
-			get => this.error;
-			set
-			{
-				if (this.error == value)
-					return;
-
-				this.error = value;
-				RaisePropertyChanged ();
-			}
-		}
-
-		private bool isBusy;
-		private string input, error;
 		private RelayCommand join;
 		private CancellationTokenSource cancelSource;
 		private readonly ILiveCampaignClient liveClient;
@@ -78,8 +38,8 @@ namespace Aura.ViewModels
 
 			IsBusy = true;
 			try {
-				RemoteCampaign campaign = await this.liveClient.GetCampaignDetailsAsync (new Uri (Input), this.cancelSource.Token);
-				MessengerInstance.Send (new RequestJoinCampaignMessage (campaign));
+				RemoteCampaign campaign = await this.liveClient.GetCampaignDetailsAsync (Input, this.cancelSource.Token);
+				MessengerInstance.Send (new JoinCampaignMessage (campaign));
 			} catch (OperationCanceledException) {
 			} finally {
 				IsBusy = false;

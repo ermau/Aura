@@ -130,34 +130,42 @@
     <Compile Include="EditCampaignsPage.xaml.cs">
       <DependentUpon>EditCampaignsPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="EditPlayspacesPage.xaml.cs">
-      <DependentUpon>EditPlayspacesPage.xaml</DependentUpon>
+    <Compile Include="EffectsPage.cs" />
+    <Compile Include="ElementEditorView.xaml.cs">
+      <DependentUpon>ElementEditorView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ElementsPage.xaml.cs">
-      <DependentUpon>ElementsPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="EncountersPage.xaml.cs">
-      <DependentUpon>EncountersPage.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="ElementsPage.cs" />
+    <Compile Include="EncountersPage.cs" />
     <Compile Include="FlyoutService.cs" />
+    <Compile Include="GamePage.xaml.cs">
+      <DependentUpon>GamePage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="IconConverter.cs" />
+    <Compile Include="IsNullVisibilityConverter.cs" />
     <Compile Include="JoinCampaignDialog.xaml.cs">
       <DependentUpon>JoinCampaignDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="LayersPage.xaml.cs">
-      <DependentUpon>LayersPage.xaml</DependentUpon>
+    <Compile Include="JoinGamePage.xaml.cs">
+      <DependentUpon>JoinGamePage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="LayersPage.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="MasterDetailPage.xaml.cs">
+      <DependentUpon>MasterDetailPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MessageFlyoutContext.cs" />
     <Compile Include="PlaybackPreview.xaml.cs">
       <DependentUpon>PlaybackPreview.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PlaylistsPage.xaml.cs">
-      <DependentUpon>PlaylistsPage.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="PlaySpacesPage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\AuraService.cs" />
+    <Compile Include="Services\FileBackedEnvironmentalService.cs" />
+    <Compile Include="Services\LocalCacheService.cs" />
     <Compile Include="Services\LocalSyncService.cs" />
+    <Compile Include="Services\WindowsAudioService.cs" />
     <Compile Include="SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
     </Compile>
@@ -195,15 +203,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="EditPlayspacesPage.xaml">
+    <Page Include="ElementEditorView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ElementsPage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="EncountersPage.xaml">
+    <Page Include="GamePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -211,7 +215,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="LayersPage.xaml">
+    <Page Include="JoinGamePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -219,11 +223,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="PlaybackPreview.xaml">
+    <Page Include="MasterDetailPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PlaylistsPage.xaml">
+    <Page Include="PlaybackPreview.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -234,19 +238,16 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
-      <Version>6.2.10</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Toolkit.Uwp.UI.Controls">
-      <Version>7.0.0-preview3</Version>
+      <Version>6.2.11</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.UI.Xaml">
-      <Version>2.5.0-prerelease.200923002</Version>
+      <Version>2.5.0</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.3</Version>
     </PackageReference>
     <PackageReference Include="System.Composition">
-      <Version>5.0.0-rc.2.20475.5</Version>
+      <Version>5.0.0</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

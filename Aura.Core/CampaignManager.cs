@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 
+using Aura.Data;
 using Aura.Messages;
 using Aura.Service;
 
@@ -9,31 +10,42 @@ using GalaSoft.MvvmLight.Messaging;
 namespace Aura
 {
 	internal class CampaignManager
-		: SingleSelectionManager<Campaign>
+		: SingleSelectionManager<CampaignElement>
 	{
 		public CampaignManager (ISyncService syncProvider)
 			: base (syncProvider)
 		{
-			Messenger.Default.Register<RequestJoinCampaignMessage> (this, OnJoinCampaign);
+			Messenger.Default.Register<JoinCampaignMessage> (this, OnJoinCampaign);
 		}
 
-		protected override Campaign NoSelectionElement => NoSelectionCampaign;
+		protected override CampaignElement NoSelectionElement => NoSelectionCampaign;
 
-		private static readonly Campaign NoSelectionCampaign = new Campaign { Name = "Campaigns" };
+		private static readonly CampaignElement NoSelectionCampaign = new CampaignElement { Name = "Campaigns" };
 
-		private async void OnJoinCampaign (RequestJoinCampaignMessage joinRequest)
+		private async void OnJoinCampaign (JoinCampaignMessage joinRequest)
 		{
-			Campaign campaign = await CreateCampaignAsync (joinRequest.Campaign);
+			await JoinCampaignAsync (joinRequest);
+		}
+
+		private async void OnConnectCampaign (JoinConnectCampaignMessage connectRequest)
+		{
+			await JoinCampaignAsync (connectRequest);
+			Messenger.Default.Send (new ConnectCampaignMessage (connectRequest.Campaign));
+		}
+
+		private async Task JoinCampaignAsync (RemoteCampaignMessage message)
+		{
+			CampaignElement campaign = await CreateCampaignAsync (message.Campaign);
 			SelectedElement = campaign;
 		}
 
-		private async Task<Campaign> CreateCampaignAsync (RemoteCampaign campaign)
+		internal async Task<CampaignElement> CreateCampaignAsync (RemoteCampaign campaign)
 		{
-			Campaign c = Elements.FirstOrDefault (e => e.Id == campaign.id.ToString ());
+			CampaignElement c = Elements.FirstOrDefault (e => e.Id == campaign.id.ToString ());
 			if (c != null)
 				return c;
 
-			c = new Campaign {
+			c = new CampaignElement {
 				Id = campaign.id.ToString(),
 				IsRemote = true,
 				Name = campaign.Name,
@@ -41,7 +53,7 @@ namespace Aura
 			};
 
 			await SyncService.SaveElementAsync (c);
-			AddElement (c);
+			NotifyAddElement (c);
 			return c;
 		}
 	}

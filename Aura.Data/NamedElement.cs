@@ -1,12 +1,12 @@
-﻿namespace Aura
+﻿namespace Aura.Data
 {
-	public class NamedElement
+	public record NamedElement
 		: Element
 	{
 		public string Name
 		{
 			get;
-			set;
+			init;
 		}
 	}
 }

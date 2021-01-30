@@ -1,12 +1,22 @@
-﻿namespace Aura.Data
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Aura.Data
 {
-	public class CampaignElement
+	public record CampaignElement
 		: NamedElement
 	{
-		public string CampaignId
+		public Guid Secret
 		{
 			get;
-			set;
+			init;
+		}
+
+		public bool IsRemote
+		{
+			get;
+			init;
 		}
 	}
 }

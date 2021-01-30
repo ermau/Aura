@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 
+using Aura.Data;
 using Aura.Messages;
 using Aura.Service.Client;
 using Aura.Services;
@@ -10,6 +12,7 @@ using GalaSoft.MvvmLight.Messaging;
 
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -42,56 +45,108 @@ namespace Aura
 		/// <param name="e">Details about the launch request and process.</param>
 		protected override void OnLaunched(LaunchActivatedEventArgs e)
 		{
-			Messenger.Default.Register<ServiceDiscoveredMesage> (this, OnServiceDiscovered);
+			StartupServices();
+			LaunchUi (e.PrelaunchActivated, e.PreviousExecutionState);
+		}
 
-			var uiReady = new TaskCompletionSource<bool> ();
-			this.serviceProvider = new AsyncServiceProvider (typeof (App).Assembly, typeof (Hue.HueService).Assembly, typeof (ILiveCampaignClient).Assembly);
-			Services = this.serviceProvider;
-			this.serviceProvider.Expect<CampaignManager> ();
-			this.serviceProvider.Expect<PlaySpaceManager> ();
+		protected override async void OnActivated (IActivatedEventArgs args)
+		{
+			StartupServices ();
 
-			StartupAsync (uiReady.Task);
+			if (args.Kind == ActivationKind.Protocol && args is ProtocolActivatedEventArgs activated) {
+				/*
+				 * aura://play/{id}[?ui=bool] - play `id` immediately
+				 * aura://campaign/{id}[?][start=bool] - switch to campaign and show play page; if not found query web service and ask to join
+				 */
+
+				LaunchUi (prelaunched: false, activated.PreviousExecutionState);
+
+				switch (activated.Uri.Host) {
+					case "campaign":
+						await ActivateCampaign (activated.Uri);
+						break;
+				}
+			}
+		}
+
+		private void LaunchUi (bool prelaunched, ApplicationExecutionState previousState)
+		{
+			var tcs = new TaskCompletionSource<bool> ();
+			GetStarted (tcs.Task);
 
 			this.rootFrame = Window.Current.Content as Frame;
 			if (rootFrame == null) {
-				rootFrame = new Frame();
+				rootFrame = new Frame ();
 				rootFrame.NavigationFailed += OnNavigationFailed;
 
-				if (e.PreviousExecutionState == ApplicationExecutionState.Terminated) {
+				if (previousState == ApplicationExecutionState.Terminated) {
 					//TODO: Load state from previously suspended application
 				}
 
 				Window.Current.Content = rootFrame;
 			}
 
-			if (e.PrelaunchActivated == false) {
+			if (!prelaunched) {
 				if (rootFrame.Content == null) {
 					// When the navigation stack isn't restored navigate to the first page,
 					// configuring the new page by passing required information as a navigation
 					// parameter
-					rootFrame.Navigate(typeof(MainPage), e.Arguments);
+					rootFrame.Navigate (typeof (MainPage));
 				}
 
-				Window.Current.Activate();
-				uiReady.SetResult (true);
+				Window.Current.Activate ();
 			}
+
+			tcs.SetResult (true);
 		}
 
 		private Frame rootFrame;
 		private AsyncServiceProvider serviceProvider;
+		private ISyncService sync;
 
-		private async void StartupAsync (Task uiReady)
+		private async Task ActivateCampaign (Uri uri)
 		{
+			CampaignManager campaigns = await Services.GetServiceAsync<CampaignManager> ();
+
+			string campaignId = uri.Segments[1];
+			CampaignElement campaign = campaigns.Elements.FirstOrDefault (c => c.Id == campaignId);
+			if (campaign == null)
+				return;
+
+			campaigns.SelectedElement = campaign;
+		}
+
+		private async void StartupServices()
+		{
+			if (this.serviceProvider != null)
+				return;
+
+			this.serviceProvider = new AsyncServiceProvider (typeof (App).Assembly, typeof (Hue.HueService).Assembly, typeof (ILiveCampaignClient).Assembly);
+			Services = this.serviceProvider;
+			Messenger.Default.Register<ServiceDiscoveredMesage> (this, OnServiceDiscovered);
+			
+			this.serviceProvider.Expect<CampaignManager> ();
+			this.serviceProvider.Expect<PlaySpaceManager> ();
+
 			ISyncService sync = await this.serviceProvider.GetServiceAsync<ISyncService> ();
+			ISettingsManager settings = await this.serviceProvider.GetServiceAsync<ISettingsManager> ();
 
 			this.serviceProvider.Register (new CampaignManager (sync));
-			this.serviceProvider.Register (new PlaySpaceManager (sync));
+			this.serviceProvider.Register (new PlaySpaceManager (sync, settings));
+		}
 
-			await GettingStarted.StartAsync (this.serviceProvider, uiReady);
+		private async void GetStarted(Task uiReady)
+		{
+			await GettingStarted.StartAsync (App.Services, uiReady);
 		}
 
 		private async void OnServiceDiscovered (ServiceDiscoveredMesage msg)
 		{
+			var playspaceManager = await this.serviceProvider.GetServiceAsync<PlaySpaceManager> ();
+			bool isEnabled = await playspaceManager.GetIsServiceEnabledAsync (msg.Service);
+			if (isEnabled)
+				return;
+
 			await this.rootFrame.Dispatcher.RunAsync (Windows.UI.Core.CoreDispatcherPriority.Low, () => {
 				FlyoutService.PushFlyout ("ServiceAvailableFlyout", new EnableServiceRequestViewModel (msg.Service));
 			});

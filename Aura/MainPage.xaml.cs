@@ -1,26 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Aura.Data;
 using Aura.Messages;
 using Aura.Service;
 using Aura.Service.Client;
 using Aura.ViewModels;
 
-using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Messaging;
 
-using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Storage;
-using Windows.UI;
 using Windows.UI.Core;
-using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -41,21 +37,48 @@ namespace Aura
 				await join.ShowAsync ();
 			});
 
+			Messenger.Default.Register<RequestCreateCampaignPromptMessage> (this, async rc => {
+				var create = new CreateCampaignDialog ();
+				await create.ShowAsync ();
+			});
+
+			Messenger.Default.Register<CampaignDisconnectedMessage> (this, cd => {
+				FlyoutService.PushFlyout ("LostConnectionFlyout", null);
+			});
+
+			Messenger.Default.Register<CampaignReconnectedMessage> (this, cr => {
+				FlyoutService.SwapFlyout ("LostConnectionFlyout", "ReconnectedFlyout", null);
+			});
+
+			Messenger.Default.Register<ConnectCampaignMessage> (this, cc => {
+				// If the play page has already been created, this will swap to it, but it will have heard
+				// this messege and start connecting to it.
+				if (!TryNavigateToPage (PlayPageName))
+					return;
+
+				Messenger.Default.Send (cc);
+			});
+
+			Messenger.Default.Register<PromptMessage> (this, p => p.Result = OnPromptAsync (p));
+
 			FlyoutService.RegisterFlyoutTarget (this.contentFrame);
-
-			var titleBar = ApplicationView.GetForCurrentView ().TitleBar;
-			titleBar.ButtonBackgroundColor = Colors.Transparent;
-			titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-
-			var coreTitleBar = CoreApplication.GetCurrentView ().TitleBar;
-			coreTitleBar.ExtendViewIntoTitleBar = true;
-			UpdateTitleBarLayout (coreTitleBar);
-
-			Window.Current.SetTitleBar (AppTitleBar);
-			coreTitleBar.LayoutMetricsChanged += (sender, args) => UpdateTitleBarLayout (sender);
-			coreTitleBar.IsVisibleChanged += (sender, args) => AppTitleBar.Visibility = (sender.IsVisible) ? Visibility.Visible : Visibility.Collapsed;
-
 			Clipboard.ContentChanged += OnClipboardContentChanged;
+
+			Loaded += MainPage_Loaded;
+		}
+
+		private async Task<bool> OnPromptAsync (PromptMessage msg)
+		{
+			var dialog = new ContentDialog {
+				Title = msg.Title,
+				Content = msg.Message,
+				PrimaryButtonText = msg.PositiveAction,
+				DefaultButton = ContentDialogButton.Secondary,
+				SecondaryButtonText = "Cancel"
+			};
+
+			var result = await dialog.ShowAsync ();
+			return (result == ContentDialogResult.Primary);
 		}
 
 		private AppViewModel vm;
@@ -114,23 +137,33 @@ namespace Aura
 		private async void OnCampaignsChanged (object sender, NotifyCollectionChangedEventArgs e)
 		{
 			await Dispatcher.RunAsync (CoreDispatcherPriority.Normal, () =>
-				UpdateMenu (this.campaignsNav, Symbol.World, e, this.vm.Campaigns, new Campaign { Name = "No campaigns" }));
+				UpdateMenu (this.campaignsNav, Symbol.World, e, this.vm.Campaigns, new CampaignElement { Name = "No campaigns" }));
 		}
 
-		private void UpdateTitleBarLayout (CoreApplicationViewTitleBar title)
+		private const string NavPageName = "NavPage";
+		private void MainPage_Loaded (object sender, RoutedEventArgs e)
 		{
-			LeftPaddingColumn.Width = new GridLength (title.SystemOverlayLeftInset);
-			RightPaddingColumn.Width = new GridLength (title.SystemOverlayRightInset);
-			AppTitleBar.Height = title.Height;
+			if (ApplicationData.Current.LocalSettings.Values.TryGetValue (NavPageName, out object navObj) && navObj is string tag) {
+				TryNavigateToPage (tag);
+			}
+		}
+
+		private bool TryNavigateToPage (string page)
+		{
+			var navItem = this.nav.MenuItems.OfType<NavigationViewItem> ().FirstOrDefault (n => (string)n.Tag == page);
+			if (navItem != null) {
+				navItem.IsSelected = true;
+				return true;
+			} else
+				return false;
 		}
 
 		private void OnNavigationSelectionChanged (NavigationView sender, NavigationViewSelectionChangedEventArgs args)
 		{
-			if (args.IsSettingsSelected)
-				this.contentFrame.Navigate (typeof (SettingsPage));
-			else {
-				this.contentFrame.Navigate (PageMap[(string)args.SelectedItemContainer.Tag]);
-			}
+			string tag = (!args.IsSettingsSelected) ? (string)args.SelectedItemContainer.Tag : "settings";
+			this.contentFrame.Navigate (PageMap[tag]);
+
+			ApplicationData.Current.LocalSettings.Values[NavPageName] = tag;
 		}
 
 		private void OnHomeTapped (object sender, TappedRoutedEventArgs e)
@@ -143,14 +176,18 @@ namespace Aura
 			((FrameworkElement)sender).ContextFlyout.ShowAt ((FrameworkElement)sender);
 		}
 
+		private const string PlayPageName = "play";
+
 		private static readonly Dictionary<string, Type> PageMap = new Dictionary<string, Type> {
-			{ "play", typeof(PlayPage) },
+			{ "settings", typeof(SettingsPage) },
 			{ "layers", typeof(LayersPage) },
 			{ "encounters", typeof(EncountersPage) },
-			{ "playlists", typeof(PlaylistsPage) },
+			//{ "playlists", typeof(PlaylistsPage) },
 			{ "elements", typeof(ElementsPage) },
 			{ "campaigns", typeof(EditCampaignsPage) },
-			{ "playspaces", typeof(EditPlayspacesPage) }
+			{ "playspaces", typeof(PlaySpacesPage) },
+			{ PlayPageName, typeof(JoinGamePage) },
+			{ "effects", typeof(EffectsPage) }
 		};
 
 		private Flyout dragFlyout;
@@ -159,60 +196,74 @@ namespace Aura
 		private async void OnClipboardContentChanged (object sender, object e)
 		{
 			DataPackageView dataPackageView = Clipboard.GetContent ();
-			string url = await dataPackageView.TryGetJoinLinkAsync ();
+			(string url, bool isJoin) = await dataPackageView.TryGetLinkAsync ();
 			if (url == null)
 				return;
-			
-			var newSource = new CancellationTokenSource (15000);
-			var oldSource = Interlocked.Exchange (ref this.clipboardCampaignCancel, newSource);
-			oldSource?.Cancel ();
 
-			var client = await App.Services.GetServiceAsync<ILiveCampaignClient> ();
-			try {
-				RemoteCampaign campaign = await client.GetCampaignDetailsAsync (new Uri (url), newSource.Token);
-				if (campaign == null)
-					return;
-
-				var campaigns = await App.Services.GetServiceAsync<CampaignManager> ();
-				if (campaigns.Elements.Any (c => c.Id == campaign.id.ToString ()))
-					return;
-
-				FlyoutService.PushFlyout ("CopyConnectFlyout", new JoinCampaignRequestViewModel (campaign));
-			} catch (OperationCanceledException) {
-			}
+			PromptConnect (url, isJoin);
 		}
+
+		private const int Inset = 70;
 
 		private void OnDragEnter (object sender, DragEventArgs e)
 		{
 			HideDragFlyout ();
 
-			if (e.DataView.AvailableFormats.Contains (StandardDataFormats.WebLink)) {
-				Uri uri = e.DataView.GetWebLinkAsync ().AsTask().Result;
-				if (LiveCampaignClient.IsLiveUri (uri)) {
-					e.AcceptedOperation = DataPackageOperation.Link;
-					e.DragUIOverride.IsCaptionVisible = false;
-				}
-			} else if (e.DataView.AvailableFormats.Contains (StandardDataFormats.StorageItems)) {
+			if (AttemptShowConnect (e))
+				return;
+
+			if (e.DataView.AvailableFormats.Contains (StandardDataFormats.StorageItems)) {
 				e.AcceptedOperation = DataPackageOperation.Copy;
 				e.DragUIOverride.IsCaptionVisible = false;
 
 				this.dragFlyout = (Flyout)Resources["ImportFlyout"];
 				this.dragFlyout.ShowAt (this.contentFrame, new FlyoutShowOptions {
-					Position = new Point (this.contentFrame.ActualWidth / 2, 40),
+					Position = new Point (this.contentFrame.ActualWidth / 2, Inset),
 					ShowMode = FlyoutShowMode.Transient
 				});
-			} else if (e.DataView.AvailableFormats.Contains (StandardDataFormats.Text)) {
-				string text = e.DataView.GetTextAsync ().AsTask().Result;
-				if (LiveCampaignClient.IsLiveUri (text)) {
-					e.AcceptedOperation = DataPackageOperation.Link;
-					e.DragUIOverride.IsCaptionVisible = false;
+			}
+		}
 
-					this.dragFlyout = (Flyout)Resources["ConnectFlyout"];
-					this.dragFlyout.ShowAt (this.contentFrame, new FlyoutShowOptions {
-						Position = new Point (this.contentFrame.ActualWidth / 2, 40),
-						ShowMode = FlyoutShowMode.Transient
-					});
-				}
+		private bool AttemptShowConnect(DragEventArgs e)
+		{
+			if (!e.DataView.CouldHaveLink())
+				return false;
+
+			e.AcceptedOperation = DataPackageOperation.Link;
+			e.DragUIOverride.IsCaptionVisible = false;
+
+			ShowConnect (e);
+
+			return true;
+		}
+
+		private async void ShowConnect (DragEventArgs e)
+		{
+			(string url, bool isConnect) = await e.DataView.TryGetLinkAsync ();
+			if (url == null)
+				return;
+
+			ShowConnect (url, isConnect);
+		}
+
+		private async void ShowConnect (string url, bool isConnect)
+		{
+			var client = await App.Services.GetServiceAsync<ILiveCampaignClient> ();
+
+			try {
+				var cancel = new CancellationTokenSource (5000);
+				var details = await client.GetCampaignDetailsAsync (url, cancel.Token);
+				
+				string message = (isConnect)
+					? $"Drop to connect to {details.Name}"
+					: $"Drop to join {details.Name}";
+
+				string glyph = (isConnect)
+					? "&#E768;"
+					: "&#E71B;";
+
+				FlyoutService.ShowMessage (message, glyph);
+			} catch (OperationCanceledException) {
 			}
 		}
 
@@ -229,39 +280,43 @@ namespace Aura
 			HideDragFlyout ();
 		}
 
-		private void OnDrop (object sender, DragEventArgs e)
+		private async void PromptConnect(DragEventArgs e)
 		{
-			if (e.DataView.AvailableFormats.Contains (StandardDataFormats.StorageItems)) {
-				var ch = ((Grid)this.dragFlyout.Content).Children;
-				((TextBlock)ch[1]).Text = "Importing package...";
-				var progress = ((ProgressBar)ch[2]);
-				progress.Visibility = Visibility.Visible;
+			(string url, bool isConnect) = await e.DataView.TryGetLinkAsync ();
+			if (url == null)
+				return;
 
-				Task.Delay (2000).ContinueWith (async t => {
-					progress.IsIndeterminate = false;
-					for (int i = 0; i <= 100; i++) {
-						await Task.Delay (150);
-						progress.Value = i;
-					}
-				}, TaskScheduler.FromCurrentSynchronizationContext ());
-			} else
-				HideDragFlyout ();
+			PromptConnect (url, isConnect);
 		}
 
-		private async Task<bool> ImportStorageItemAsync (IStorageItem item)
+		private async void PromptConnect(string url, bool isConnect)
 		{
-			if (item is IStorageFolder folder) {
-				/*var items = await folder.GetItemsAsync ();
-				foreach (IStorageItem folderItem in items) {
-					if (!await ValidateStorageItemAsync (folderItem))
-						return false;
-				}*/
+			var newSource = new CancellationTokenSource (15000);
+			var oldSource = Interlocked.Exchange (ref this.clipboardCampaignCancel, newSource);
+			oldSource?.Cancel ();
 
-				return true;
-			} else if (item is IStorageFile file) {
-				return (file.Name.EndsWith (".aura"));
-			} else {
-				throw new InvalidOperationException ();
+			var client = await App.Services.GetServiceAsync<ILiveCampaignClient> ();
+			try {
+				Task<RemoteCampaign> campaignTask = client.GetCampaignDetailsAsync (new Uri (url), newSource.Token);
+
+				var campaigns = await App.Services.GetServiceAsync<CampaignManager> ();
+				var campaign = await campaignTask;
+				if (campaign == null || campaigns.Elements.Any (c => c.Id == campaign.id.ToString ()))
+					return;
+
+				if (!isConnect) {
+					FlyoutService.PushFlyout ("CampaignConnectFlyout", new JoinCampaignRequestViewModel (campaign));
+				}
+			} catch (OperationCanceledException) {
+			}
+		}
+
+		private void OnDrop (object sender, DragEventArgs e)
+		{
+			if (e.DataView.CouldHaveLink()) {
+				HideDragFlyout ();
+				PromptConnect (e);
+				return;
 			}
 		}
 

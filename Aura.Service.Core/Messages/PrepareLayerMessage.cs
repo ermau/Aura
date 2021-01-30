@@ -8,7 +8,7 @@ namespace Aura.Service.Messages
 {
 	public class PrepareLayerMessage
 	{
-		public Layer Layer
+		public LayerElement Layer
 		{
 			get;
 			set;

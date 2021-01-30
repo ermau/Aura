@@ -18,7 +18,7 @@ namespace Aura.ViewModels
 		public bool IsOpen
 		{
 			get => this.isOpen;
-			protected set
+			set
 			{
 				if (this.isOpen == value)
 					return;

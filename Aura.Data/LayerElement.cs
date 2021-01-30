@@ -4,13 +4,13 @@ using System.Text;
 
 namespace Aura.Data
 {
-	public class Layer
-		: CampaignElement
+	public record LayerElement
+		: CampaignChildElement
 	{
-		public IList<EnvironmentElement> Elements
+		public IReadOnlyList<string> EnvironmentElements
 		{
 			get;
-			set;
+			init;
 		}
 	}
 }

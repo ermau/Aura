@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
@@ -78,6 +79,21 @@ namespace Aura
 			QueuedFlyouts = null;
 		}
 
+		public static void ShowMessage (string message, string glyph)
+		{
+			var context = new MessageFlyoutContext {
+				Message = message,
+				Glyph = glyph
+			};
+
+			PushFlyout ("MessageFlyout", context);
+		}
+
+		public static void CloseMessage()
+		{
+			PopFlyout ("MessageFlyout");
+		}
+
 		public static void PushFlyout (string flyoutName, object context)
 		{
 			if (flyoutName == null)
@@ -89,14 +105,32 @@ namespace Aura
 			}
 
 			var oldFlyout = CurrentFlyout;
-			Flyouts.Push (oldFlyout);
+			Flyouts.Add (oldFlyout);
 
 			var flyout = GetFlyout (flyoutName, context);
 			SwapFlyouts (oldFlyout, flyout);
 		}
 
+		public static void PopFlyout (string flyoutName)
+		{
+			if (flyoutName is null)
+				throw new ArgumentNullException (nameof (flyoutName));
+
+			var old = (Flyout)App.Current.Resources[flyoutName];
+			Flyouts.Remove (old);
+		}
+
+		public static void SwapFlyout (string oldFlyout, string flyoutName, object context)
+		{
+			if (oldFlyout is null)
+				throw new ArgumentNullException (nameof (oldFlyout));
+
+			PushFlyout (flyoutName, context);
+			PopFlyout (oldFlyout);
+		}
+
 		private static Queue<(string, object)> QueuedFlyouts = new Queue<(string, object)> ();
-		private static readonly Stack<Flyout> Flyouts = new Stack<Flyout> ();
+		private static readonly List<Flyout> Flyouts = new List<Flyout> ();
 		private static Flyout CurrentFlyout;
 		private static FrameworkElement TargetElement;
 		private static CoreApplicationViewTitleBar titleBar;
@@ -136,16 +170,24 @@ namespace Aura
 
 		private static void UpdateInset() => FlyoutInset = (titleBar.Height > 0) ? titleBar.Height : FlyoutInset;
 
+		private static void CloseFlyout (Flyout flyout)
+		{
+			Flyout newFlyout = null;
+			if (CurrentFlyout == flyout && Flyouts.Count > 0) {
+				int i = Flyouts.Count - 1;
+				newFlyout = Flyouts[i];
+				Flyouts.RemoveAt (i);
+			}
+
+			SwapFlyouts (flyout, newFlyout);
+		}
+
 		private static void OnFlyoutClosed (object sender, object e)
 		{
 			SetIsVisible (((Flyout)sender).Content, false);
 
-			Flyout newFlyout = null;
 			var closed = (Flyout)sender;
-			if (CurrentFlyout == closed)
-				Flyouts.TryPop (out newFlyout);
-
-			SwapFlyouts (closed, newFlyout);
+			CloseFlyout (closed);
 		}
 	}
 }

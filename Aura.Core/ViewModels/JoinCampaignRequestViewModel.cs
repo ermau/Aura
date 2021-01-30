@@ -16,7 +16,7 @@ namespace Aura.ViewModels
 		{
 			Campaign = campaign ?? throw new ArgumentNullException (nameof (campaign));
 			JoinCommand = new RelayCommand (() => {
-				MessengerInstance.Send (new RequestJoinCampaignMessage (Campaign));
+				MessengerInstance.Send (new JoinCampaignMessage (Campaign));
 				IsOpen = false;
 			});
 		}
@@ -31,6 +31,31 @@ namespace Aura.ViewModels
 		public override string Message
 		{
 			get => $"Would you like to join {Campaign.Name}?";
+		}
+	}
+
+	internal class ConnectCampaignRequestViewModel
+			: PromptRequestViewModel
+	{
+		public ConnectCampaignRequestViewModel (RemoteCampaign campaign)
+		{
+			Campaign = campaign ?? throw new ArgumentNullException (nameof (campaign));
+			JoinCommand = new RelayCommand (() => {
+				MessengerInstance.Send (new JoinConnectCampaignMessage(Campaign));
+				IsOpen = false;
+			});
+		}
+
+		public RemoteCampaign Campaign { get; }
+
+		public ICommand JoinCommand
+		{
+			get;
+		}
+
+		public override string Message
+		{
+			get => $"Would you like to connect to {Campaign.Name}?";
 		}
 	}
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
+using Aura.Data;
 using Aura.Messages;
 
 using GalaSoft.MvvmLight;
@@ -31,7 +32,11 @@ namespace Aura.ViewModels
 				if (this.isSelected == value)
 					return;
 
-				this.manager.SelectedElement = this.element;
+				this.isSelected = value;
+				if (value)
+					this.manager.SelectedElement = this.element;
+
+				RaisePropertyChanged ();
 			}
 		}
 
@@ -46,7 +51,8 @@ namespace Aura.ViewModels
 			if (msg.Type != typeof (T))
 				return;
 
-			IsSelected = msg.SelectedElement == this.element;
+			this.isSelected = msg.SelectedElement == this.element;
+			RaisePropertyChanged (nameof (IsSelected));
 		}
 	}
 }

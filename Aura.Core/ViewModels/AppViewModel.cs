@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 
 using GalaSoft.MvvmLight;
 
+using Aura.Data;
+
 namespace Aura.ViewModels
 {
 	internal class AppViewModel

@@ -1,4 +1,6 @@
-﻿using Windows.UI.Xaml.Controls;
+﻿using Aura.ViewModels;
+
+using Windows.UI.Xaml.Controls;
 
 namespace Aura
 {
@@ -7,6 +9,7 @@ namespace Aura
 	{
 		public CreateCampaignDialog ()
 		{
+			DataContext = new CreateCampaignDialogViewModel (App.Services);
 			InitializeComponent ();
 		}
 	}

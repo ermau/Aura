@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+
+using Aura.ViewModels;
+
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -20,11 +23,12 @@ namespace Aura
 	/// <summary>
 	/// An empty page that can be used on its own or navigated to within a Frame.
 	/// </summary>
-	public sealed partial class LayersPage : Page
+	public sealed partial class JoinGamePage : Page
 	{
-		public LayersPage ()
+		public JoinGamePage ()
 		{
-			this.InitializeComponent ();
+			DataContext = new JoinPlayPageViewModel (App.Services);
+			InitializeComponent ();
 		}
 	}
 }

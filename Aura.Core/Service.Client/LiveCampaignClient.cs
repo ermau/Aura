@@ -5,11 +5,11 @@ using System.Composition;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.SignalR.Client;
-using Aura.Service.Client;
-using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR.Client;
+using Newtonsoft.Json;
 
+using Aura.Service.Client;
 
 namespace Aura.Service
 {
@@ -25,23 +25,23 @@ namespace Aura.Service
 			return IsLiveUri (uri);
 		}
 
-		public static bool IsJoinUri (string url)
+		public static bool IsConnectUri (string url)
 		{
 			if (!Uri.TryCreate (url, UriKind.Absolute, out Uri uri))
 				return false;
 
-			return IsJoinUri (uri);
+			return IsConnectUri (uri);
 		}
 
-		public static bool IsJoinUri (Uri uri)
+		public static bool IsConnectUri (Uri uri)
 		{
 			if (!IsLiveUri (uri))
 				return false;
-
-			return true;
+			
+			return (uri.AbsolutePath.ToLowerInvariant ().EndsWith ("/play"));
 		}
 
-		public static bool IsLiveUri (Uri uri) => uri.AbsoluteUri.StartsWith (baseUri);
+		public static bool IsLiveUri (Uri uri) => uri.Host == BaseUri.Host;
 
 		public async Task StartAsync (IAsyncServiceProvider services)
 		{
@@ -54,7 +54,7 @@ namespace Aura.Service
 		public async Task<RemoteCampaign> CreateCampaignAsync (string name, CancellationToken cancelToken)
 		{
 			try {
-				HttpResponseMessage response = await this.client.GetAsync (new Uri (baseUri + "campaigns/create?name=" + name), cancelToken).ConfigureAwait (false);
+				HttpResponseMessage response = await this.client.GetAsync (new Uri (BaseUri + "campaigns/create?name=" + name), cancelToken).ConfigureAwait (false);
 				if (!response.IsSuccessStatusCode)
 					return null;
 
@@ -89,7 +89,7 @@ namespace Aura.Service
 
 			string url = id;
 			if (!IsLiveUri (id))
-				url = baseUri + "campaigns/" + id;
+				url = BaseUri + "campaigns/" + id;
 
 			return GetCampaignDetailsAsync (new Uri (url), cancelToken);
 		}
@@ -104,7 +104,7 @@ namespace Aura.Service
 				throw new ArgumentException (nameof (id));
 
 			HubConnection connection = new HubConnectionBuilder ()
-				.WithUrl (baseUri + "CampaignHub")
+				.WithUrl (BaseUri + "CampaignHub")
 				.WithAutomaticReconnect ()
 				/*.ConfigureLogging(logging => {
 					logging.SetMinimumLevel (LogLevel.Debug);

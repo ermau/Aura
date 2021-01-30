@@ -4,19 +4,19 @@ using System.Text;
 
 namespace Aura.Data
 {
-	public class EnvironmentElement
-		: CampaignElement
+	public record EnvironmentElement
+		: CampaignChildElement
 	{
-		public string ContentHash
+		public Timing Timing
 		{
 			get;
-			set;
+			init;
 		}
 
-		public string Source
+		public Positioning Positioning
 		{
 			get;
-			set;
+			init;
 		}
 	}
 }

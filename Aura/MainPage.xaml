@@ -4,87 +4,77 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Aura"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 	<Page.Resources>
 		<local:IconConverter x:Key="TypeIconConverter" />
 	</Page.Resources>
-	
-	<Grid AllowDrop="True" Drop="OnDrop" DragEnter="OnDragEnter" DragLeave="OnDragLeave">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto" />
-			<RowDefinition />
-		</Grid.RowDefinitions>
-		<Grid x:Name="AppTitleBar" Grid.Row="0" Background="Transparent">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition x:Name="LeftPaddingColumn" Width="0" />
-				<ColumnDefinition />
-				<ColumnDefinition x:Name="RightPaddingColumn" Width="0" />
-			</Grid.ColumnDefinitions>
 
-			<TextBlock Grid.Column="1">Aura</TextBlock>
-		</Grid>
-		
-		<NavigationView Grid.RowSpan="2" Name="nav" OpenPaneLength="200" SelectionChanged="OnNavigationSelectionChanged" IsSettingsVisible="True">
-			<NavigationView.AutoSuggestBox>
-				<AutoSuggestBox Name="search" QueryIcon="Find" PlaceholderText="Search" QuerySubmitted="SearchQuerySubmitted" TextChanged="SearchTextChanged" ItemsSource="{Binding SearchResults}" TextMemberPath="Name">
-					<AutoSuggestBox.ItemTemplate>
-						<DataTemplate>
-							<Grid>
-								<Grid.ColumnDefinitions>
-									<ColumnDefinition Width="Auto" />
-									<ColumnDefinition Width="*" />
-								</Grid.ColumnDefinitions>
+	<NavigationView Grid.RowSpan="2" Name="nav" OpenPaneLength="200" SelectionChanged="OnNavigationSelectionChanged" IsSettingsVisible="True"
+					AllowDrop="True" Drop="OnDrop" DragEnter="OnDragEnter" DragLeave="OnDragLeave">
+		<NavigationView.AutoSuggestBox>
+			<AutoSuggestBox Name="search" QueryIcon="Find" PlaceholderText="Search" QuerySubmitted="SearchQuerySubmitted" TextChanged="SearchTextChanged" ItemsSource="{Binding SearchResults}" TextMemberPath="Name">
+				<AutoSuggestBox.ItemTemplate>
+					<DataTemplate>
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto" />
+								<ColumnDefinition Width="*" />
+							</Grid.ColumnDefinitions>
 
-								<ContentPresenter Grid.Column="0" Content="{Binding Converter={StaticResource TypeIconConverter}}" />
-								<TextBlock Margin="10,0,0,0" Grid.Column="1" Text="{Binding Name}" />
-							</Grid>
-						</DataTemplate>
-					</AutoSuggestBox.ItemTemplate>
-				</AutoSuggestBox>
-			</NavigationView.AutoSuggestBox>
-			<NavigationView.MenuItems>
-				<NavigationViewItem Icon="Play" Tag="play">Play</NavigationViewItem>
-				<NavigationViewItemSeparator />
-				<NavigationViewItemHeader>Library</NavigationViewItemHeader>
-				<NavigationViewItem Icon="People" Tag="encounters">Encounters</NavigationViewItem>
-				<NavigationViewItem Content="Layers" Tag="layers">
-					<NavigationViewItem.Icon>
-						<FontIcon Glyph="&#xE81E;" />
-					</NavigationViewItem.Icon>
+							<ContentPresenter Grid.Column="0" Content="{Binding Converter={StaticResource TypeIconConverter}}" />
+							<TextBlock Margin="10,0,0,0" Grid.Column="1" Text="{Binding Name}" />
+						</Grid>
+					</DataTemplate>
+				</AutoSuggestBox.ItemTemplate>
+			</AutoSuggestBox>
+		</NavigationView.AutoSuggestBox>
+		<NavigationView.MenuItems>
+			<!--<NavigationViewItem Icon="Play" Tag="play">Play</NavigationViewItem>
+			<NavigationViewItemSeparator />!-->
+			<NavigationViewItemHeader>Library</NavigationViewItemHeader>
+			<!--<NavigationViewItem Icon="People" Tag="encounters">Encounters</NavigationViewItem>!-->
+			<!--<NavigationViewItem Content="Layers" Tag="layers">
+				<NavigationViewItem.Icon>
+					<FontIcon Glyph="&#xE81E;" />
+				</NavigationViewItem.Icon>
+			</NavigationViewItem>!-->
+			<!--<NavigationViewItem Content="Playlists" Tag="playlists">
+				<NavigationViewItem.Icon>
+					<FontIcon Glyph="&#xE93C;" />
+				</NavigationViewItem.Icon>
+			</NavigationViewItem>!-->
+			<NavigationViewItem Icon="Preview" Tag="elements">Elements</NavigationViewItem>
+			<!--<NavigationViewItem Tag="effects" Content="Effects">
+				<NavigationViewItem.Icon>
+					<FontIcon Glyph="&#xE706;" />
+				</NavigationViewItem.Icon>
+			</NavigationViewItem>!-->
+		</NavigationView.MenuItems>
+		<NavigationView.Content>
+			<Frame Name="contentFrame" />
+		</NavigationView.Content>
+		<NavigationView.PaneFooter>
+			<StackPanel>
+				<NavigationViewItem Name="playspacesNav" Tag="playspaces" Icon="Home" Content="{Binding PlaySpaces.SelectedElement.Name}" Tapped="OnHomeTapped">
+					<NavigationViewItem.ContextFlyout>
+						<MenuFlyout x:Name="playspacesMenu">
+							<MenuFlyoutSeparator />
+							<MenuFlyoutItem Icon="Edit" Click="OnEditPlayspaces">Edit Play Spaces</MenuFlyoutItem>
+						</MenuFlyout>
+					</NavigationViewItem.ContextFlyout>
 				</NavigationViewItem>
-				<NavigationViewItem Content="Playlists" Tag="playlists">
-					<NavigationViewItem.Icon>
-						<FontIcon Glyph="&#xE93C;" />
-					</NavigationViewItem.Icon>
+				<NavigationViewItem Name="campaignsNav" Tag="campaigns" Icon="World" Content="{Binding Campaigns.SelectedElement.Name}" HorizontalContentAlignment="Stretch" Tapped="OnCampaignTapped">
+					<NavigationViewItem.ContextFlyout>
+						<MenuFlyout x:Name="campaignsMenu">
+							<MenuFlyoutSeparator Name="campaignSeparator" />
+							<MenuFlyoutItem Icon="Edit" Click="OnEditCampaigns">Edit Campaigns</MenuFlyoutItem>
+							<MenuFlyoutItem Icon="Link" Click="OnJoinCampaign">Join Campaign</MenuFlyoutItem>
+						</MenuFlyout>
+					</NavigationViewItem.ContextFlyout>
 				</NavigationViewItem>
-				<NavigationViewItem Icon="Preview" Tag="elements">Elements</NavigationViewItem>
-			</NavigationView.MenuItems>
-			<NavigationView.Content>
-				<Frame Name="contentFrame" />
-			</NavigationView.Content>
-			<NavigationView.PaneFooter>
-				<StackPanel>
-					<NavigationViewItem Name="playspacesNav" Tag="playspaces" Icon="Home" Content="{Binding PlaySpaces.SelectedElement.Name}" Tapped="OnHomeTapped">
-						<NavigationViewItem.ContextFlyout>
-							<MenuFlyout x:Name="playspacesMenu">
-								<MenuFlyoutSeparator />
-								<MenuFlyoutItem Icon="Edit" Click="OnEditPlayspaces">Edit Playspaces</MenuFlyoutItem>
-							</MenuFlyout>
-						</NavigationViewItem.ContextFlyout>
-					</NavigationViewItem>
-					<NavigationViewItem Name="campaignsNav" Tag="campaigns" Icon="World" Content="{Binding Campaigns.SelectedElement.Name}" HorizontalContentAlignment="Stretch" Tapped="OnCampaignTapped">
-						<NavigationViewItem.ContextFlyout>
-							<MenuFlyout x:Name="campaignsMenu">
-								<MenuFlyoutSeparator Name="campaignSeparator" />
-								<MenuFlyoutItem Icon="Edit" Click="OnEditCampaigns">Edit Campaigns</MenuFlyoutItem>
-								<MenuFlyoutItem Icon="Link" Click="OnJoinCampaign">Join Campaign</MenuFlyoutItem>
-							</MenuFlyout>
-						</NavigationViewItem.ContextFlyout>
-					</NavigationViewItem>
-				</StackPanel>
-			</NavigationView.PaneFooter>
-		</NavigationView>
-	</Grid>
+			</StackPanel>
+		</NavigationView.PaneFooter>
+	</NavigationView>
 </Page>

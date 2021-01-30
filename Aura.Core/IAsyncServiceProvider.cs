@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Aura
 {
-	internal interface IAsyncServiceProvider
+	public interface IAsyncServiceProvider
 	{
 		Task<T> GetServiceAsync<T> ();
 		Task<T[]> GetServicesAsync<T> ();

@@ -4,37 +4,37 @@ using System.Text;
 
 namespace Aura.Data
 {
-	public class ReverbElement
+	public record ReverbElement
 		: Element
 	{
 		public double WetDry
 		{
 			get;
-			set;
+			init;
 		}
 
 		public double Density
 		{
 			get;
-			set;
+			init;
 		}
 
 		public double DecayTime
 		{
 			get;
-			set;
+			init;
 		}
 
 		public double RoomFrequency
 		{
 			get;
-			set;
+			init;
 		}
 
 		public double RoomHighFrequency
 		{
 			get;
-			set;
+			init;
 		}
 	}
 }
