@@ -19,6 +19,7 @@ namespace Aura.ViewModels
 				throw new ArgumentNullException (nameof (id));
 
 			DeleteCommand = new RelayCommand (OnDelete, CanDelete);
+			Load ();
 		}
 
 		protected ElementViewModel (IAsyncServiceProvider serviceProvider, ISyncService syncService, T element)
@@ -39,9 +40,13 @@ namespace Aura.ViewModels
 			private set;
 		}
 
-		protected override async Task SetupAsync ()
+		protected async void Load()
 		{
-			await base.SetupAsync ();
+			await LoadAsync ();
+		}
+
+		protected virtual async Task LoadAsync ()
+		{
 			if (Element == default) {
 				Element = await SyncService.GetElementByIdAsync<T> (this.id);
 			}
