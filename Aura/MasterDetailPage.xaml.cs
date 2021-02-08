@@ -37,6 +37,15 @@ namespace Aura
 			set => SetValue (TitleProperty, value);
 		}
 
+		public static readonly DependencyProperty ShowSortingProperty =
+			DependencyProperty.Register (nameof (ShowSorting), typeof (bool), typeof (MasterDetailPage), new PropertyMetadata (true));
+
+		public bool ShowSorting
+		{
+			get => (bool)GetValue (ShowSortingProperty);
+			set => SetValue (ShowSortingProperty, value);
+		}
+
 		public static readonly DependencyProperty PaneContentProperty =
 			DependencyProperty.Register (nameof (PaneContent), typeof (object), typeof (MasterDetailPage), new PropertyMetadata (null, 
 				(d,e) => {

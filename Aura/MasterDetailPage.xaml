@@ -20,7 +20,7 @@
 				</Grid.RowDefinitions>
 
 				<TextBlock Padding="10,5,10,5" Grid.Row="0" Text="{Binding Title,ElementName=page}" Style="{ThemeResource SubtitleTextBlockStyle}" />
-				<ComboBox Grid.Row="1" HorizontalAlignment="Stretch" Header="Sort By" Margin="10,5,10,5">
+				<ComboBox Grid.Row="1" HorizontalAlignment="Stretch" Header="Sort By" Margin="10,5,10,5" Visibility="{Binding ShowSorting,ElementName=page,Converter={StaticResource BoolVisibility}}">
 					<ComboBoxItem IsSelected="True">Alphabetical</ComboBoxItem>
 					<ComboBoxItem>Campaign</ComboBoxItem>
 				</ComboBox>

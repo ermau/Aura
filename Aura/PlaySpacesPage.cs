@@ -13,6 +13,7 @@ namespace Aura
 		public  PlaySpacesPage()
 		{
 			Title = "Play Spaces";
+			ShowSorting = false;
 			DataContext = new PlaySpacesViewModel (App.Services);
 		}
 	}
