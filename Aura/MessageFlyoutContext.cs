@@ -2,7 +2,16 @@
 {
 	internal class MessageFlyoutContext
 	{
-		public string Glyph;
-		public string Message;
+		public string Glyph
+		{
+			get;
+			set;
+		}
+
+		public string Message
+		{
+			get;
+			set;
+		}
 	}
 }

@@ -13,5 +13,26 @@ namespace Aura.Data
 			get;
 			init;
 		}
+
+		public IReadOnlyDictionary<string, IReadOnlyList<PairedDevice>> Pairings
+		{
+			get;
+			init;
+		}
+	}
+
+	public record PairedDevice
+	{
+		public string Id
+		{
+			get;
+			init;
+		}
+
+		public string Pair
+		{
+			get;
+			init;
+		}
 	}
 }

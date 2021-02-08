@@ -68,7 +68,8 @@ namespace Aura
 					IDiscoverableService service = results[completed];
 					results.Remove (completed);
 
-					Messenger.Default.Send (new ServiceDiscoveredMesage (service));
+					if (completed.Result)
+						Messenger.Default.Send (new ServiceDiscoveredMesage (service));
 				}
 			});
 		}

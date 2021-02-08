@@ -156,6 +156,9 @@
       <DependentUpon>MasterDetailPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="MessageFlyoutContext.cs" />
+    <Compile Include="PairDialog.xaml.cs">
+      <DependentUpon>PairDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PlaybackPreview.xaml.cs">
       <DependentUpon>PlaybackPreview.xaml</DependentUpon>
     </Compile>
@@ -169,7 +172,11 @@
     <Compile Include="SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="WaitForPairDialog.xaml.cs">
+      <DependentUpon>WaitForPairDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="WinExtensions.cs" />
+    <Compile Include="WorkingContentDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -227,11 +234,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="PairDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="PlaybackPreview.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="SettingsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WaitForPairDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

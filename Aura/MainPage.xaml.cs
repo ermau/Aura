@@ -259,8 +259,8 @@ namespace Aura
 					: $"Drop to join {details.Name}";
 
 				string glyph = (isConnect)
-					? "&#E768;"
-					: "&#E71B;";
+					? "\xE768"
+					: "\xE71B";
 
 				FlyoutService.ShowMessage (message, glyph);
 			} catch (OperationCanceledException) {

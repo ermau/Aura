@@ -124,6 +124,9 @@ namespace Aura
 			this.serviceProvider = new AsyncServiceProvider (typeof (App).Assembly, typeof (Hue.HueService).Assembly, typeof (ILiveCampaignClient).Assembly);
 			Services = this.serviceProvider;
 			Messenger.Default.Register<ServiceDiscoveredMesage> (this, OnServiceDiscovered);
+			Messenger.Default.Register<PairServiceMessage> (this, OnPairService);
+			Messenger.Default.Register<PairServiceWaitMessage> (this, OnWaitForPair);
+			Messenger.Default.Register<PairServiceResultMessage> (this, OnPairServiceResult);
 			
 			this.serviceProvider.Expect<CampaignManager> ();
 			this.serviceProvider.Expect<PlaySpaceManager> ();
@@ -143,13 +146,43 @@ namespace Aura
 		private async void OnServiceDiscovered (ServiceDiscoveredMesage msg)
 		{
 			var playspaceManager = await this.serviceProvider.GetServiceAsync<PlaySpaceManager> ();
-			bool isEnabled = await playspaceManager.GetIsServiceEnabledAsync (msg.Service);
-			if (isEnabled)
+			bool isEnabled = await playspaceManager.TryRestoreServiceAsync (msg.Service);
+			if (isEnabled) {
 				return;
+			}
 
 			await this.rootFrame.Dispatcher.RunAsync (Windows.UI.Core.CoreDispatcherPriority.Low, () => {
 				FlyoutService.PushFlyout ("ServiceAvailableFlyout", new EnableServiceRequestViewModel (msg.Service));
 			});
+		}
+
+		private async void OnPairService (PairServiceMessage msg)
+		{
+			var vm = new PairServiceViewModel (msg.PairedService);
+			msg.Result = vm.PairResult;
+
+			await this.rootFrame.Dispatcher.RunAsync (Windows.UI.Core.CoreDispatcherPriority.Low, async () => {
+				var dialog = new PairDialog { DataContext = vm };
+				await dialog.ShowAsync ();
+			});
+		}
+
+		private async void OnWaitForPair (PairServiceWaitMessage msg)
+		{
+			await this.rootFrame.Dispatcher.RunAsync (Windows.UI.Core.CoreDispatcherPriority.Low, async () => {
+				var dialog = new WaitForPairDialog { DataContext = msg.Context };
+				await dialog.ShowAsync ();
+			});
+		}
+
+		private void OnPairServiceResult (PairServiceResultMessage msg)
+		{
+			// TODO: Localize
+			if (msg.Exception == null) {
+				FlyoutService.ShowMessage ($"{msg.Service.DisplayName} paired successfully.", "\xE73E");
+			} else {
+				FlyoutService.ShowMessage ($"{msg.Service.DisplayName} failed to pair: {msg.Exception.Message}", "\xE783");
+			}
 		}
 
 		/// <summary>
