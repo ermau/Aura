@@ -102,7 +102,6 @@ namespace Aura
 
 		private Frame rootFrame;
 		private AsyncServiceProvider serviceProvider;
-		private ISyncService sync;
 
 		private async Task ActivateCampaign (Uri uri)
 		{

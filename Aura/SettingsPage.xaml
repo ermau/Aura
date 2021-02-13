@@ -16,7 +16,27 @@
 			<ToggleSwitch IsOn="{Binding VisualizePlayback,Mode=TwoWay}">Visualize playback</ToggleSwitch>
 			<TextBlock Style="{ThemeResource TitleTextBlockStyle}">Play Spaces</TextBlock>
 			<ToggleSwitch IsOn="{Binding AutodetectPlaySpace,Mode=TwoWay}">Auto-switch play space</ToggleSwitch>
-			
+
+			<!-- TODO: Better offline support. -->
+			<TextBlock Style="{ThemeResource TitleTextBlockStyle}">Online Services</TextBlock>
+			<ItemsControl ItemsSource="{Binding AuthedServices}">
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<StackPanel>
+							<TextBlock Style="{ThemeResource SubtitleTextBlockStyle}" Text="{Binding Service.DisplayName,Mode=OneTime}" />
+							<ProgressRing HorizontalAlignment="Left" Visibility="{Binding IsBusy,Converter={StaticResource BoolVisibility}}" Margin="0,5,0,0" IsActive="{Binding IsBusy}" />
+							<Grid Visibility="{Binding IsBusy,Converter={StaticResource InvertBoolVisibility}}">
+								<Button Command="{Binding LoginCommand}" Visibility="{Binding IsLoggedIn,Converter={StaticResource InvertBoolVisibility}}" Margin="0,5,0,0">Login</Button>
+								<StackPanel Orientation="Horizontal" Visibility="{Binding IsLoggedIn,Converter={StaticResource BoolVisibility}}" Margin="0,5,0,0">
+									<Button Command="{Binding LogoutCommand}">Logout</Button>
+									<TextBlock Text="Logged in as: " VerticalAlignment="Center" Margin="5,0,5,0" />
+									<TextBlock Text="{Binding Username}" VerticalAlignment="Center" />
+								</StackPanel>
+							</Grid>
+						</StackPanel>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
 		</StackPanel>
 	</ScrollViewer>
 </Page>

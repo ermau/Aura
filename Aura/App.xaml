@@ -12,6 +12,7 @@
 			<local:BoolVisibilityConverter x:Key="InvertBoolVisibility" Invert="True" />
 			<local:BoolVisibilityConverter x:Key="BoolVisibility" />
 			<local:IsNullVisibilityConverter x:Key="NullVisibility" />
+			<local:IsNullVisibilityConverter x:Key="InvertNullVisibility" Invert="True" />
 
 			<Flyout x:Key="CampaignJoinFlyout">
 				<Grid local:FlyoutService.IsVisible="{Binding IsOpen,Mode=TwoWay}">
