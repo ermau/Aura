@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Messaging;
 
 using Aura.Messages;
+using System.Linq.Expressions;
 
 namespace Aura.Data
 {
@@ -39,9 +40,9 @@ namespace Aura.Data
 			return Task.Run<IReadOnlyList<NamedElement>> (async () => {
 				Type nameable = typeof (NamedElement);
 
+				var found = new List<NamedElement> ();
 				await Sync.WaitAsync ();
 				try {
-					var found = new List<NamedElement> ();
 					foreach (var kvp in this.elements) {
 						if (!nameable.IsAssignableFrom (Type.GetType (kvp.Key)))
 							continue;
@@ -53,6 +54,34 @@ namespace Aura.Data
 					}
 
 					return found;
+				} finally {
+					Sync.Release ();
+				}
+			});
+		}
+
+		public Task<IReadOnlyList<T>> FindElements<T> (Expression<Func<T, bool>> predicateExpression) where T : Element
+		{
+			if (predicateExpression is null)
+				throw new ArgumentNullException (nameof (predicateExpression));
+
+			var predicateTask = Task.Run (() => predicateExpression.Compile ());
+			return Task.Run (async () => {
+				Type type = typeof (T);
+				var found = new List<T> ();
+				await Sync.WaitAsync ();
+				try {
+					foreach (var kvp in this.elements) {
+						if (!type.IsAssignableFrom (Type.GetType (kvp.Key)))
+							continue;
+
+						foreach (T e in kvp.Value.Values) {
+							if (predicateTask.Result (e))
+								found.Add (e);
+						}
+					}
+
+					return (IReadOnlyList<T>)found;
 				} finally {
 					Sync.Release ();
 				}
