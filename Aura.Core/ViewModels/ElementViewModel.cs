@@ -13,20 +13,30 @@ namespace Aura.ViewModels
 		where T : Element
 	{
 		protected ElementViewModel (IAsyncServiceProvider serviceProvider, ISyncService syncService, string id)
-			: base (serviceProvider, syncService)
+			: this (serviceProvider, syncService)
 		{
 			if (id is null)
 				throw new ArgumentNullException (nameof (id));
 
-			DeleteCommand = new RelayCommand (OnDelete, CanDelete);
+			this.id = id;
 			Load ();
 		}
 
 		protected ElementViewModel (IAsyncServiceProvider serviceProvider, ISyncService syncService, T element)
-			: base (serviceProvider, syncService)
+			: this (serviceProvider, syncService)
 		{
 			this.id = element.Id;
 			Element = element;
+			ModifiedElement = Element;
+			Load ();
+		}
+
+		private ElementViewModel (IAsyncServiceProvider serviceProvider, ISyncService syncService)
+			: base (serviceProvider, syncService)
+		{
+			DeleteCommand = new RelayCommand (OnDelete, CanDelete);
+			SaveCommand = new RelayCommand (OnSave, CanSave);
+			ResetCommand = new RelayCommand (OnReset, CanReset);
 		}
 
 		public ICommand DeleteCommand
@@ -34,10 +44,41 @@ namespace Aura.ViewModels
 			get;
 		}
 
-		public T Element
+		public ICommand SaveCommand
 		{
 			get;
-			private set;
+		}
+
+		public ICommand ResetCommand
+		{
+			get;
+		}
+
+		public T Element
+		{
+			get => this.element;
+			protected set
+			{
+				if (this.element == value)
+					return;
+
+				this.element = value;
+				RaisePropertyChanged ();
+			}
+		}
+
+		protected T ModifiedElement
+		{
+			get => this.modifiedElement;
+			set
+			{
+				if (this.modifiedElement == value)
+					return;
+
+				this.modifiedElement = value;
+				RaisePropertyChanged ();
+				OnModified ();
+			}
 		}
 
 		protected async void Load()
@@ -47,9 +88,18 @@ namespace Aura.ViewModels
 
 		protected virtual async Task LoadAsync ()
 		{
+			await SetupTask;
+
 			if (Element == default) {
 				Element = await SyncService.GetElementByIdAsync<T> (this.id);
+				ModifiedElement = Element;
 			}
+		}
+
+		protected virtual void OnModified()
+		{
+			((RelayCommand)SaveCommand).RaiseCanExecuteChanged ();
+			((RelayCommand)ResetCommand).RaiseCanExecuteChanged ();
 		}
 
 		protected virtual bool CanDelete() => true;
@@ -63,6 +113,37 @@ namespace Aura.ViewModels
 			}
 		}
 
+		protected virtual bool CanSave()
+			=> !Element.Equals (ModifiedElement);
+
+		protected async void OnSave()
+		{
+			await SaveAsync ();
+			Load ();
+		}
+
+		protected virtual async Task SaveAsync()
+		{
+			AddWork ();
+			
+			await SetupTask;
+			try {
+				Element = await SyncService.SaveElementAsync (ModifiedElement);
+				ModifiedElement = Element;
+			} finally {
+				FinishWork ();
+			}
+		}
+
+		protected virtual void OnReset()
+		{
+			ModifiedElement = Element;
+		}
+
+		protected virtual bool CanReset ()
+			=> !Element.Equals (ModifiedElement);
+
 		private readonly string id;
+		private T element, modifiedElement;
 	}
 }

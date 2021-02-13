@@ -13,7 +13,7 @@ namespace Aura.ViewModels
 		{
 		}
 
-		protected override EncounterViewModel CreateElementViewModel (EncounterElement element)
+		protected override EncounterViewModel InitializeElementViewModel (EncounterElement element)
 		{
 			return new EncounterViewModel (ServiceProvider, SyncService, element);
 		}

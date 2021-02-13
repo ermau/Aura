@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Command;
-
 namespace Aura.ViewModels
 {
-
 	internal abstract class DataViewModel
-		: ViewModelBase
+		: BusyViewModel
 	{
 		protected DataViewModel (IAsyncServiceProvider serviceProvider)
 		{

@@ -17,7 +17,7 @@ namespace Aura.ViewModels
 			};
 		}
 
-		protected override EnvironmentElementViewModel<EnvironmentElement> CreateElementViewModel (EnvironmentElement element)
+		protected override EnvironmentElementViewModel<EnvironmentElement> InitializeElementViewModel (EnvironmentElement element)
 		{
 			return new EnvironmentElementViewModel<EnvironmentElement> (ServiceProvider, SyncService, element);
 		}
