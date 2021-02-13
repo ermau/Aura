@@ -115,16 +115,13 @@ namespace Aura.Data
 					this.elements[elementType.GetSimpleTypeName()] = items = new Dictionary<string, object> ();
 				}
 
-				string newId = null;
-				if (element.Id != null && items.TryGetValue (element.Id, out object existing) && existing is T t) {
+				if (element.Id == null) {
+					element = (T)element.Update (Guid.NewGuid().ToString());
+				} else if (items.TryGetValue (element.Id, out object existing) && existing is T t) {
 					if (t.Version != element.Version) {
-						throw new InvalidOperationException ($"Attempted to updat against version {element.Version} but found existing version {t.Version} for {typeof (T)}");
+						throw new InvalidOperationException ($"Attempted to update against version {element.Version} but found existing version {t.Version} for {typeof (T)}");
 					}
-				} else {
-					newId = Guid.NewGuid ().ToString ();
 				}
-
-				element = (T)element.Update (newId);
 				
 				items[element.Id] = element;
 				await SaveAsync ();
