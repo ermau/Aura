@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -65,6 +66,8 @@ namespace Aura
 			});
 
 			Messenger.Default.Register<PromptMessage> (this, p => p.Result = OnPromptAsync (p));
+
+			Messenger.Default.Register<NavigateToElementMessage> (this, OnNavigateToElement);
 
 			FlyoutService.RegisterFlyoutTarget (this.contentFrame);
 			Clipboard.ContentChanged += OnClipboardContentChanged;
@@ -165,13 +168,13 @@ namespace Aura
 
 		private void OnNavigationSelectionChanged (NavigationView sender, NavigationViewSelectionChangedEventArgs args)
 		{
+			string tag = (!args.IsSettingsSelected) ? (string)args.SelectedItemContainer.Tag : "settings";
+			ApplicationData.Current.LocalSettings.Values[NavPageName] = tag;
+
 			if (this.isNavigating)
 				return;
 
-			string tag = (!args.IsSettingsSelected) ? (string)args.SelectedItemContainer.Tag : "settings";
 			this.contentFrame.Navigate (PageMap[tag]);
-
-			ApplicationData.Current.LocalSettings.Values[NavPageName] = tag;
 		}
 
 		private void OnHomeTapped (object sender, TappedRoutedEventArgs e)
@@ -195,7 +198,16 @@ namespace Aura
 			{ "campaigns", typeof(EditCampaignsPage) },
 			{ "playspaces", typeof(PlaySpacesPage) },
 			{ PlayPageName, typeof(JoinGamePage) },
-			{ "effects", typeof(EffectsPage) }
+			{ "effects", typeof(EffectsPage) },
+			{ "samples", typeof(SamplesPage) }
+		};
+
+		private static readonly Dictionary<Type, string> ElementMap = new Dictionary<Type, string> {
+			{ typeof(FileSample), "samples" },
+			{ typeof(EncounterElement), "encounters" },
+			{ typeof(LayerElement), "layers" },
+			{ typeof(CampaignElement), "campaigns" },
+			{ typeof(PlaySpaceElement), "playspaces" }
 		};
 
 		private bool isNavigating;
@@ -340,7 +352,7 @@ namespace Aura
 				this.vm.SearchQuery = sender.Text;
 		}
 
-		private async void OnJoinCampaign (object sender, RoutedEventArgs e)
+		private void OnJoinCampaign (object sender, RoutedEventArgs e)
 		{
 			Messenger.Default.Send (new RequestJoinCampaignPromptMessage ());
 		}
@@ -426,6 +438,19 @@ namespace Aura
 					this.nav.SelectedItem = this.nav.SettingsItem;
 			}
 
+			this.isNavigating = false;
+		}
+
+		private void OnNavigateToElement (NavigateToElementMessage msg)
+		{
+			if (!ElementMap.TryGetValue (msg.Type, out string tag)) {
+				Trace.WriteLine ($"Could not find element type for {msg.Type} to navigate");
+			}
+
+			Type pageType = PageMap[tag];
+			this.contentFrame.Navigate (pageType, msg.Id);
+			this.isNavigating = true;
+			TryNavigateToPage (tag);
 			this.isNavigating = false;
 		}
 	}
