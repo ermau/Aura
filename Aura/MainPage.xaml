@@ -12,7 +12,7 @@
 	</Page.Resources>
 
 	<NavigationView Grid.RowSpan="2" Name="nav" OpenPaneLength="200" SelectionChanged="OnNavigationSelectionChanged" IsSettingsVisible="True"
-					AllowDrop="True" Drop="OnDrop" DragEnter="OnDragEnter" DragLeave="OnDragLeave">
+					AllowDrop="True" Drop="OnDrop" DragEnter="OnDragEnter" DragLeave="OnDragLeave" IsBackEnabled="{Binding CanGoBack,ElementName=contentFrame}" BackRequested="OnBackRequested">
 		<NavigationView.AutoSuggestBox>
 			<AutoSuggestBox Name="search" QueryIcon="Find" PlaceholderText="Search" QuerySubmitted="SearchQuerySubmitted" TextChanged="SearchTextChanged" ItemsSource="{Binding SearchResults}" TextMemberPath="Name">
 				<AutoSuggestBox.ItemTemplate>

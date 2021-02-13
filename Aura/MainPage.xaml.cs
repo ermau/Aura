@@ -16,6 +16,7 @@ using GalaSoft.MvvmLight.Messaging;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Storage;
+using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -31,6 +32,10 @@ namespace Aura
 		{
 			InitializeComponent();
 			SetupDataContext (App.Services);
+
+			SystemNavigationManager.GetForCurrentView ().BackRequested += OnBackRequested;
+			Window.Current.CoreWindow.PointerPressed += OnPointerPressed;
+			Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += OnAcceleratorKeyActivated;
 
 			Messenger.Default.Register<RequestJoinCampaignPromptMessage> (this, async rj => {
 				var join = new JoinCampaignDialog ();
@@ -160,6 +165,9 @@ namespace Aura
 
 		private void OnNavigationSelectionChanged (NavigationView sender, NavigationViewSelectionChangedEventArgs args)
 		{
+			if (this.isNavigating)
+				return;
+
 			string tag = (!args.IsSettingsSelected) ? (string)args.SelectedItemContainer.Tag : "settings";
 			this.contentFrame.Navigate (PageMap[tag]);
 
@@ -190,6 +198,7 @@ namespace Aura
 			{ "effects", typeof(EffectsPage) }
 		};
 
+		private bool isNavigating;
 		private Flyout dragFlyout;
 		private CancellationTokenSource clipboardCampaignCancel;
 
@@ -344,6 +353,80 @@ namespace Aura
 		private void OnEditPlayspaces (object sender, RoutedEventArgs e)
 		{
 			this.nav.SelectedItem = this.playspacesNav;
+		}
+
+		private void OnBackRequested (object sender, BackRequestedEventArgs e)
+		{
+			e.Handled = TryGoBack ();
+		}
+
+		private void OnAcceleratorKeyActivated (CoreDispatcher sender, AcceleratorKeyEventArgs args)
+		{
+			// When Alt+Left are pressed navigate back.
+			// When Alt+Right are pressed navigate forward.
+			if (args.EventType == CoreAcceleratorKeyEventType.SystemKeyDown
+				&& (args.VirtualKey == VirtualKey.Left || args.VirtualKey == VirtualKey.Right)
+				&& args.KeyStatus.IsMenuKeyDown == true
+				&& !args.Handled) {
+
+				if (args.VirtualKey == VirtualKey.Left) {
+					args.Handled = TryGoBack ();
+				} else if (args.VirtualKey == VirtualKey.Right) {
+					args.Handled = TryGoForward ();
+				}
+			}
+		}
+
+		private void OnPointerPressed (CoreWindow sender, PointerEventArgs args)
+		{
+			// For this event, e.Handled arrives as 'true', so invert the value.
+			if (args.CurrentPoint.Properties.IsXButton1Pressed && args.Handled) {
+				args.Handled = !TryGoBack ();
+			} else if (args.CurrentPoint.Properties.IsXButton2Pressed && args.Handled) {
+				args.Handled = TryGoForward ();
+			}
+		}
+
+		private void OnBackRequested (NavigationView sender, NavigationViewBackRequestedEventArgs args)
+		{
+			TryGoBack ();
+		}
+
+		private bool TryGoBack()
+		{
+			if (!this.contentFrame.CanGoBack)
+				return false;
+
+			this.contentFrame.GoBack ();
+			UpdateSelectionForCurrentContent ();
+			return true;
+		}
+
+		private bool TryGoForward()
+		{
+			if (!this.contentFrame.CanGoForward)
+				return false;
+
+			this.contentFrame.GoForward ();
+			UpdateSelectionForCurrentContent ();
+			return true;
+		}
+
+		private void UpdateSelectionForCurrentContent()
+		{
+			this.isNavigating = true;
+
+			Type contentType = this.contentFrame.Content.GetType ();
+			KeyValuePair<string, Type> content = PageMap.FirstOrDefault (kvp => kvp.Value == contentType);
+			if (!content.Equals (default)) {
+				NavigationViewItem item = this.nav.MenuItems.Concat (this.footerItems.Children).OfType<NavigationViewItem> ().FirstOrDefault (nvi => nvi.Tag.Equals (content.Key));
+				if (item != null)
+					this.nav.SelectedItem = item;
+				else if (content.Key == "settings")
+					this.nav.SelectedItem = this.nav.SettingsItem;
+			}
+
+			this.isNavigating = false;
 		}
 	}
 }
