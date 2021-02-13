@@ -32,7 +32,7 @@ namespace Aura.ViewModels
 				if (this.isBusy == value)
 					return;
 
-				this.isBusy = false;
+				this.isBusy = value;
 				RaisePropertyChanged ();
 				Command.RaiseCanExecuteChanged ();
 			}

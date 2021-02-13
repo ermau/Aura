@@ -127,6 +127,9 @@
     <Compile Include="CreateCampaignDialog.xaml.cs">
       <DependentUpon>CreateCampaignDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DownloadsPage.xaml.cs">
+      <DependentUpon>DownloadsPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="EditCampaignsPage.xaml.cs">
       <DependentUpon>EditCampaignsPage.xaml</DependentUpon>
     </Compile>
@@ -205,6 +208,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="CreateCampaignDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DownloadsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

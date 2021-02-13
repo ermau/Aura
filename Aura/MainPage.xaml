@@ -56,7 +56,18 @@
 			<Frame Name="contentFrame" />
 		</NavigationView.Content>
 		<NavigationView.PaneFooter>
-			<StackPanel>
+			<StackPanel Name="footerItems">
+				<NavigationViewItem Name="downloadNav" Tag="downloads" Icon="Download" VerticalContentAlignment="Center">
+					<Grid Width="140" VerticalAlignment="Center">
+						<Grid.RowDefinitions>
+							<RowDefinition />
+							<RowDefinition Height="Auto" />
+						</Grid.RowDefinitions>
+
+						<TextBlock Grid.Row="0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Text="{Binding DownloadText}" VerticalAlignment="Center"/>
+						<ProgressBar Grid.Row="1" Value="{Binding DownloadProgress}" Maximum="1" Visibility="{Binding IsDownloading,Converter={StaticResource BoolVisibility}}" Margin="0,5,0,0" />
+					</Grid>
+				</NavigationViewItem>
 				<NavigationViewItem Name="playspacesNav" Tag="playspaces" Icon="Home" Content="{Binding PlaySpaces.SelectedElement.Name}" Tapped="OnHomeTapped">
 					<NavigationViewItem.ContextFlyout>
 						<MenuFlyout x:Name="playspacesMenu">

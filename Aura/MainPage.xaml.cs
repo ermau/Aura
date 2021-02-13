@@ -93,7 +93,11 @@ namespace Aura
 
 		private async void SetupDataContext (IAsyncServiceProvider services)
 		{
-			this.vm = new AppViewModel (await services.GetServiceAsync<ISyncService> (), await services.GetServiceAsync<CampaignManager>(), await services.GetServiceAsync<PlaySpaceManager>());
+			this.vm = new AppViewModel (
+				await services.GetServiceAsync<ISyncService> (),
+				await services.GetServiceAsync<DownloadManager>(),
+				await services.GetServiceAsync<CampaignManager>(),
+				await services.GetServiceAsync<PlaySpaceManager>());
 			DataContext = this.vm;
 			((INotifyCollectionChanged)this.vm.Campaigns.Elements).CollectionChanged += OnCampaignsChanged;
 			OnCampaignsChanged (null, new NotifyCollectionChangedEventArgs (NotifyCollectionChangedAction.Reset));
