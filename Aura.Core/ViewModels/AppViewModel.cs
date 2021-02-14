@@ -35,18 +35,7 @@ namespace Aura.ViewModels
 			get;
 		}
 
-		public IReadOnlyList<NamedElement> SearchResults
-		{
-			get => this.searchResults;
-			private set
-			{
-				if (this.searchResults == value)
-					return;
-
-				this.searchResults = value;
-				RaisePropertyChanged ();
-			}
-		}
+		public IReadOnlyList<SearchResultItem> SearchResults => this.searchResults;
 
 		public string SearchQuery
 		{
@@ -98,22 +87,30 @@ namespace Aura.ViewModels
 		private readonly DownloadManager downloads;
 		private readonly SynchronizationContext synchronization;
 		private string searchQuery;
-		private IReadOnlyList<NamedElement> searchResults;
+		private ObservableCollectionEx<SearchResultItem> searchResults = new ObservableCollectionEx<SearchResultItem>();
 
 		private bool isDownloading;
 		private string downloadText = "Downloads"; // TODO: Localize
-		private double downloadProgress;
 		private ManagedDownload watchingDownload;
 
 		private async void Search ()
 		{
-			SearchResults = null;
-			if (String.IsNullOrWhiteSpace (SearchQuery))
+			if (String.IsNullOrWhiteSpace (SearchQuery)) {
+				this.searchResults = null;
+				RaisePropertyChanged (nameof (SearchResults));
 				return;
+			} else if (this.searchResults == null) {
+				this.searchResults = new ObservableCollectionEx<SearchResultItem> ();
+			}
 
-			SearchResults = await this.syncService.FindElementsByNameAsync (SearchQuery);
-			if (SearchResults.Count == 0)
-				SearchResults = new[] { new NamedElement { Name = "No Results" } };
+			IEnumerable<SearchResultItem> results;
+			var rs = (await this.syncService.FindElementsByNameAsync (SearchQuery)).Select (ne => new SearchResultItem (ne)).Take (5).ToList();
+			if (rs.Count == 0)
+				results = new[] { new SearchResultItem ("No Results") };
+			else
+				results = rs;
+
+			this.searchResults.Reset (results);
 		}
 
 		private void OnDownloadsChanged (object sender, EventArgs e)
@@ -158,6 +155,39 @@ namespace Aura.ViewModels
 				OnDownloadsChanged (this, EventArgs.Empty);
 			else if (e.PropertyName == nameof(ManagedDownload.Progress))
 				RaisePropertyChanged (nameof (DownloadProgress));
+		}
+	}
+
+	internal class SearchResultItem
+	{
+		public SearchResultItem (NamedElement element)
+		{
+			Element = element ?? throw new ArgumentNullException (nameof (element));
+			DisplayText = Element.Name;
+			ActionText = "Go to details";
+		}
+
+		public SearchResultItem (string text)
+		{
+			if (string.IsNullOrWhiteSpace (text))
+				throw new ArgumentException ($"'{nameof (text)}' cannot be null or whitespace", nameof (text));
+
+			DisplayText = text;
+		}
+
+		public string DisplayText
+		{
+			get;
+		}
+
+		public NamedElement Element
+		{
+			get;
+		}
+
+		public string ActionText
+		{
+			get;
 		}
 	}
 }

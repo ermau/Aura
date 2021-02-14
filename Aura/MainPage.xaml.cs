@@ -347,7 +347,12 @@ namespace Aura
 
 		private void SearchQuerySubmitted (AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
 		{
-			this.vm.SearchQuery = args.QueryText;
+			SearchResultItem result = args.ChosenSuggestion as SearchResultItem;
+			if (result?.Element == null)
+				return;
+
+			OnNavigateToElement (new NavigateToElementMessage (result.Element.Id, result.Element.GetType ()));
+			sender.Text = String.Empty;
 		}
 
 		private void SearchTextChanged (AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)

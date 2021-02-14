@@ -14,7 +14,7 @@
 	<NavigationView Grid.RowSpan="2" Name="nav" OpenPaneLength="200" SelectionChanged="OnNavigationSelectionChanged" IsSettingsVisible="True"
 					AllowDrop="True" Drop="OnDrop" DragEnter="OnDragEnter" DragLeave="OnDragLeave" IsBackEnabled="{Binding CanGoBack,ElementName=contentFrame}" BackRequested="OnBackRequested">
 		<NavigationView.AutoSuggestBox>
-			<AutoSuggestBox Name="search" QueryIcon="Find" PlaceholderText="Search" QuerySubmitted="SearchQuerySubmitted" TextChanged="SearchTextChanged" ItemsSource="{Binding SearchResults}" TextMemberPath="Name">
+			<AutoSuggestBox Name="search" QueryIcon="Find" PlaceholderText="Search" QuerySubmitted="SearchQuerySubmitted" TextChanged="SearchTextChanged" ItemsSource="{Binding SearchResults}" TextMemberPath="DisplayText">
 				<AutoSuggestBox.ItemTemplate>
 					<DataTemplate>
 						<Grid>
@@ -23,8 +23,15 @@
 								<ColumnDefinition Width="*" />
 							</Grid.ColumnDefinitions>
 
-							<ContentPresenter Grid.Column="0" Content="{Binding Converter={StaticResource TypeIconConverter}}" />
-							<TextBlock Margin="10,0,0,0" Grid.Column="1" Text="{Binding Name}" />
+							<Grid.RowDefinitions>
+								<RowDefinition />
+								<RowDefinition Height="Auto" />
+							</Grid.RowDefinitions>
+
+							<ContentPresenter Grid.Column="0" Content="{Binding Element,Converter={StaticResource TypeIconConverter}}" />
+							<TextBlock Margin="10,0,0,0" Grid.Column="1" Text="{Binding DisplayText,Mode=OneTime}" />
+
+							<TextBlock Grid.Row="1" Grid.Column="1" Margin="10,0,0,0" Style="{ThemeResource CaptionTextBlockStyle}" Text="{Binding ActionText,Mode=OneTime}" Visibility="{Binding ActionText,Converter={StaticResource NullVisibility}}" />
 						</Grid>
 					</DataTemplate>
 				</AutoSuggestBox.ItemTemplate>
