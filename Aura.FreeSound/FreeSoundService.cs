@@ -107,7 +107,7 @@ namespace Aura.FreeSound
 		{
 			return new ContentEntry {
 				Id = instance.Id,
-				SourceUrl = $"https://freesound.org/people/chrisfurby/sounds/{instance.Id}/",
+				SourceUrl = $"https://freesound.org/sounds/{instance.Id}/",
 				Name = instance.Name,
 				Description = instance.Description,
 				Author = new ContentAuthor {
