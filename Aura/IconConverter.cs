@@ -31,7 +31,8 @@ namespace Aura
 		private static readonly Dictionary<Type, (Symbol, string)> IconMap = new Dictionary<Type, (Symbol, string)> {
 			{ typeof(CampaignElement), (Symbol.World, null) },
 			{ typeof(PlaySpaceElement), (Symbol.Home, null) },
-			{ typeof(EnvironmentElement), (Symbol.Preview, null) }
+			{ typeof(EnvironmentElement), (Symbol.Preview, null) },
+			{ typeof(FileSample), (Symbol.Audio, null) }
 		};
 	}
 }

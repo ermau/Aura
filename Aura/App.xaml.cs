@@ -120,7 +120,12 @@ namespace Aura
 			if (this.serviceProvider != null)
 				return;
 
-			this.serviceProvider = new AsyncServiceProvider (typeof (App).Assembly, typeof (Hue.HueService).Assembly, typeof (ILiveCampaignClient).Assembly);
+			this.serviceProvider = new AsyncServiceProvider (
+				typeof (App).Assembly,
+				typeof (Hue.HueService).Assembly,
+				typeof (FreeSound.FreeSoundService).Assembly,
+				typeof (ILiveCampaignClient).Assembly);
+
 			Services = this.serviceProvider;
 			Messenger.Default.Register<ServiceDiscoveredMesage> (this, OnServiceDiscovered);
 			Messenger.Default.Register<PairServiceMessage> (this, OnPairService);

@@ -13,6 +13,8 @@
 			<local:BoolVisibilityConverter x:Key="BoolVisibility" />
 			<local:IsNullVisibilityConverter x:Key="NullVisibility" />
 			<local:IsNullVisibilityConverter x:Key="InvertNullVisibility" Invert="True" />
+			<local:MediaSourceConverter x:Key="MediaConverter" />
+			<local:PaginatedContentSourceConverter x:Key="PaginatedContent" />
 
 			<Flyout x:Key="CampaignJoinFlyout">
 				<Grid local:FlyoutService.IsVisible="{Binding IsOpen,Mode=TwoWay}">

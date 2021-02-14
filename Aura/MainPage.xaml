@@ -52,8 +52,11 @@
 					<FontIcon Glyph="&#xE93C;" />
 				</NavigationViewItem.Icon>
 			</NavigationViewItem>!-->
-			<NavigationViewItem Icon="Preview" Tag="elements">Elements</NavigationViewItem>
-			<!--<NavigationViewItem Tag="effects" Content="Effects">
+			<!--<NavigationViewItem Icon="Preview" Tag="elements">Elements</NavigationViewItem>!-->
+			<NavigationViewItem Icon="Audio" Tag="samples">Samples</NavigationViewItem>
+			<!--<NavigationViewItem Icon="Video" Tag="videos">Videos</NavigationViewItem>
+			<NavigationViewItem Icon="Map" Tag="maps">Maps</NavigationViewItem>
+			<NavigationViewItem Tag="effects" Content="Effects">
 				<NavigationViewItem.Icon>
 					<FontIcon Glyph="&#xE706;" />
 				</NavigationViewItem.Icon>
