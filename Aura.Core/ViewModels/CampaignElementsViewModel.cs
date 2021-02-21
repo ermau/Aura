@@ -22,18 +22,7 @@ namespace Aura.ViewModels
 			: base (services)
 		{
 			this.synchronizationContext = SynchronizationContext.Current;
-			MessengerInstance.Register<ElementsChangedMessage> (this, OnElementsChanged);
-
 			OnCampaignChanged ();
-			CreateElementCommand = new RelayCommand<string> (async s => {
-				TViewModel vm = await CreateElementAsync (s);
-				SelectedElement = vm;
-			}, s => !String.IsNullOrWhiteSpace (s));
-		}
-
-		public ICommand CreateElementCommand
-		{
-			get;
 		}
 
 		protected CampaignManager CampaignManager
@@ -42,10 +31,9 @@ namespace Aura.ViewModels
 			private set;
 		}
 
-		protected override async Task<IReadOnlyList<TViewModel>> LoadElementsAsync ()
+		protected override Task<IReadOnlyList<T>> LoadElementsAsync ()
 		{
-			var elements = await GetCampaignElementsAsync ();
-			return elements.Select (e => InitializeElementViewModel (e)).ToList ();
+			return GetCampaignElementsAsync ();
 		}
 
 		protected async Task<IReadOnlyList<T>> GetCampaignElementsAsync (bool includeNonCampaign = true)
@@ -76,13 +64,5 @@ namespace Aura.ViewModels
 		}
 
 		private readonly SynchronizationContext synchronizationContext;
-
-		private void OnElementsChanged(ElementsChangedMessage msg)
-		{
-			if (!typeof (T).IsAssignableFrom (msg.Type))
-				return;
-
-			RequestReload ();
-		}
 	}
 }

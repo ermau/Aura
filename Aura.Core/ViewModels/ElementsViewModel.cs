@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Aura.Data;
+using Aura.Messages;
 using GalaSoft.MvvmLight.Command;
 
 namespace Aura.ViewModels
@@ -18,6 +19,9 @@ namespace Aura.ViewModels
 			: base (services)
 		{
 			DeleteCommand = new RelayCommand (OnDelete, CanDelete);
+			CreateCommand = new RelayCommand<string> (OnCreate, CanCreate);
+
+			MessengerInstance.Register<ElementsChangedMessage> (this, OnElementsChanged);
 		}
 
 		public IReadOnlyList<TViewModel> Elements => this.elements;
@@ -34,6 +38,11 @@ namespace Aura.ViewModels
 				RaisePropertyChanged ();
 				((RelayCommand)DeleteCommand).RaiseCanExecuteChanged ();
 			}
+		}
+
+		public ICommand CreateCommand
+		{
+			get;
 		}
 
 		public ICommand DeleteCommand
@@ -53,7 +62,9 @@ namespace Aura.ViewModels
 		protected virtual async Task<TViewModel> CreateElementAsync (string name)
 		{
 			T element = InitializeElement (name);
+			this.saving = true;
 			element = await SyncService.SaveElementAsync (element);
+			this.saving = false;
 			TViewModel vm = InitializeElementViewModel (element);
 			this.elements.Add (vm);
 			return vm;
@@ -65,14 +76,22 @@ namespace Aura.ViewModels
 
 		protected async Task LoadAsync()
 		{
-			this.elements.Reset (await LoadElementsAsync ());
+			var elements = (await LoadElementsAsync ()).ToDictionary (t => t.Id);
+			this.elements.Update (elements.Keys, vm => vm.Id, id => InitializeElementViewModel (elements[id]));
 		}
 
-		protected virtual async Task<IReadOnlyList<TViewModel>> LoadElementsAsync ()
+		protected virtual async Task<IReadOnlyList<T>> LoadElementsAsync ()
 		{
 			await SetupTask;
-			var elements = await SyncService.GetElementsAsync<T> ();
-			return elements.Select (e => InitializeElementViewModel (e)).ToList ();
+			return await SyncService.GetElementsAsync<T> ();
+		}
+
+		protected virtual bool CanCreate (string input) =>
+			!String.IsNullOrWhiteSpace (input);
+
+		protected virtual async void OnCreate (string input)
+		{
+			SelectedElement = await CreateElementAsync (input);
 		}
 
 		protected async void RequestReload()
@@ -85,11 +104,11 @@ namespace Aura.ViewModels
 		private TViewModel selectedElement;
 		private string selectedId;
 		private Task loadingTask;
+		private bool saving;
 
 		private void OnDelete()
 		{
 			SelectedElement.DeleteCommand.Execute (null);
-			RequestReload ();
 		}
 
 		private bool CanDelete () => SelectedElement != null;
@@ -102,6 +121,14 @@ namespace Aura.ViewModels
 			SelectedElement = (this.selectedId != null)
 				? this.elements.FirstOrDefault (vm => vm.Element.Id.Equals (this.selectedId))
 				: null;
+		}
+
+		private void OnElementsChanged (ElementsChangedMessage msg)
+		{
+			if (this.saving || !typeof (T).IsAssignableFrom (msg.Type))
+				return;
+
+			RequestReload ();
 		}
 	}
 }

@@ -5,11 +5,12 @@ using System.Windows.Input;
 using GalaSoft.MvvmLight.Command;
 
 using Aura.Data;
+using Aura.Messages;
 
 namespace Aura.ViewModels
 {
 	internal abstract class ElementViewModel<T>
-		: DataViewModel
+		: DataItemViewModel<T>
 		where T : Element
 	{
 		protected ElementViewModel (IAsyncServiceProvider serviceProvider, ISyncService syncService, string id)
@@ -35,8 +36,8 @@ namespace Aura.ViewModels
 			: base (serviceProvider, syncService)
 		{
 			DeleteCommand = new RelayCommand (OnDelete, CanDelete);
-			SaveCommand = new RelayCommand (OnSave, CanSave);
-			ResetCommand = new RelayCommand (OnReset, CanReset);
+
+			MessengerInstance.Register<ElementsChangedMessage> (this, OnElementsChanged);
 		}
 
 		public ICommand DeleteCommand
@@ -44,49 +45,9 @@ namespace Aura.ViewModels
 			get;
 		}
 
-		public ICommand SaveCommand
-		{
-			get;
-		}
+		public string Id => this.id;
 
-		public ICommand ResetCommand
-		{
-			get;
-		}
-
-		public T Element
-		{
-			get => this.element;
-			protected set
-			{
-				if (this.element == value)
-					return;
-
-				this.element = value;
-				RaisePropertyChanged ();
-			}
-		}
-
-		protected T ModifiedElement
-		{
-			get => this.modifiedElement;
-			set
-			{
-				if (this.modifiedElement == value)
-					return;
-
-				this.modifiedElement = value;
-				RaisePropertyChanged ();
-				OnModified ();
-			}
-		}
-
-		protected async void Load()
-		{
-			await LoadAsync ();
-		}
-
-		protected virtual async Task LoadAsync ()
+		protected override async Task LoadAsync ()
 		{
 			await SetupTask;
 
@@ -96,10 +57,9 @@ namespace Aura.ViewModels
 			}
 		}
 
-		protected virtual void OnModified()
+		protected override bool CanSave ()
 		{
-			((RelayCommand)SaveCommand).RaiseCanExecuteChanged ();
-			((RelayCommand)ResetCommand).RaiseCanExecuteChanged ();
+			return base.CanSave () || (Element != null && Element.Id == null);
 		}
 
 		protected virtual bool CanDelete() => true;
@@ -113,37 +73,32 @@ namespace Aura.ViewModels
 			}
 		}
 
-		protected virtual bool CanSave()
-			=> !Element.Equals (ModifiedElement);
-
-		protected async void OnSave()
-		{
-			await SaveAsync ();
-			Load ();
-		}
-
-		protected virtual async Task SaveAsync()
+		protected override async Task SaveAsync()
 		{
 			AddWork ();
 			
 			await SetupTask;
 			try {
 				Element = await SyncService.SaveElementAsync (ModifiedElement);
-				ModifiedElement = Element;
+				((RelayCommand)SaveCommand).RaiseCanExecuteChanged ();
+				((RelayCommand)ResetCommand).RaiseCanExecuteChanged ();
 			} finally {
 				FinishWork ();
 			}
 		}
 
-		protected virtual void OnReset()
+		private readonly string id;
+
+		private async void OnElementsChanged (ElementsChangedMessage msg)
 		{
+			if (!typeof (T).IsAssignableFrom (msg.Type) || this.id != msg.Id)
+				return;
+
+			Element = await SyncService.GetElementByIdAsync<T> (this.id);
+			if (Element == null)
+				return;
+
 			ModifiedElement = Element;
 		}
-
-		protected virtual bool CanReset ()
-			=> !Element.Equals (ModifiedElement);
-
-		private readonly string id;
-		private T element, modifiedElement;
 	}
 }

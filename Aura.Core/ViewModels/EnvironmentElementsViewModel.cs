@@ -3,7 +3,7 @@
 namespace Aura.ViewModels
 {
 	internal class EnvironmentElementsViewModel
-		: EnvironmentElementsViewModel<EnvironmentElement, EnvironmentElementViewModel<EnvironmentElement>>
+		: EnvironmentElementsViewModel<EnvironmentElement, EnvironmentElementViewModel>
 	{
 		public EnvironmentElementsViewModel (IAsyncServiceProvider services)
 			: base (services)
@@ -17,9 +17,9 @@ namespace Aura.ViewModels
 			};
 		}
 
-		protected override EnvironmentElementViewModel<EnvironmentElement> InitializeElementViewModel (EnvironmentElement element)
+		protected override EnvironmentElementViewModel InitializeElementViewModel (EnvironmentElement element)
 		{
-			return new EnvironmentElementViewModel<EnvironmentElement> (ServiceProvider, SyncService, element);
+			return new EnvironmentElementViewModel (ServiceProvider, SyncService, element);
 		}
 	}
 

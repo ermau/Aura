@@ -34,24 +34,19 @@ namespace Aura.ViewModels
 			get;
 		}
 
-		protected override EditSingleSelectionElementViewModel<CampaignElement> CreateViewModel (IAsyncServiceProvider services, CampaignElement element)
+		protected override CampaignElement InitializeElement (string name)
 		{
-			return new EditSingleSelectionElementViewModel<CampaignElement> (services, element);
+			return new CampaignElement { Name = name };
+		}
+
+		protected override EditSingleSelectionElementViewModel<CampaignElement> InitializeElementViewModel (CampaignElement element)
+		{
+			return new EditSingleSelectionElementViewModel<CampaignElement> (ServiceProvider, SyncService, element);
 		}
 
 		protected override async Task<SingleSelectionManager<CampaignElement>> GetManagerAsync ()
 		{
-			return await Services.GetServiceAsync<CampaignManager> ();
+			return await ServiceProvider.GetServiceAsync<CampaignManager> ();
 		}
-
-		private CampaignManager manager;
-		private EditSingleSelectionElementViewModel<CampaignElement> selectedCampaign;
-
-		private void OnDelete ()
-		{
-			SelectedElement?.DeleteCommand.Execute (null);
-		}
-
-		private bool CanDelete () => !(SelectedElement is null);
 	}
 }

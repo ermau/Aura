@@ -35,6 +35,11 @@ namespace Aura.ViewModels
 		{
 		}
 
+		public SampleViewModel(IAsyncServiceProvider services, ISyncService sync, string id)
+			: base (services, sync, id)
+		{
+		}
+
 		public string Name
 		{
 			get => ModifiedElement.Name;
