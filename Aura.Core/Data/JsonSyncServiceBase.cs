@@ -21,6 +21,7 @@ namespace Aura.Data
 
 		public async Task<T> GetElementByIdAsync<T> (string id) where T : Element
 		{
+			await this.loadTask;
 			await Sync.WaitAsync ();
 			try {
 				if (!this.elements.TryGetValue (typeof (T).GetSimpleTypeName(), out var items))
@@ -41,6 +42,7 @@ namespace Aura.Data
 				Type nameable = typeof (NamedElement);
 
 				var found = new List<NamedElement> ();
+				await this.loadTask;
 				await Sync.WaitAsync ();
 				try {
 					foreach (var kvp in this.elements) {
@@ -60,7 +62,7 @@ namespace Aura.Data
 			});
 		}
 
-		public Task<IReadOnlyList<T>> FindElements<T> (Expression<Func<T, bool>> predicateExpression) where T : Element
+		public Task<IReadOnlyList<T>> FindElementsAsync<T> (Expression<Func<T, bool>> predicateExpression) where T : Element
 		{
 			if (predicateExpression is null)
 				throw new ArgumentNullException (nameof (predicateExpression));
@@ -69,6 +71,7 @@ namespace Aura.Data
 			return Task.Run (async () => {
 				Type type = typeof (T);
 				var found = new List<T> ();
+				await this.loadTask;
 				await Sync.WaitAsync ();
 				try {
 					foreach (var kvp in this.elements) {
@@ -90,6 +93,7 @@ namespace Aura.Data
 
 		public async Task<IReadOnlyList<T>> GetElementsAsync<T> () where T : Element
 		{
+			await this.loadTask;
 			await Sync.WaitAsync ();
 			try {
 				if (!this.elements.TryGetValue (typeof (T).GetSimpleTypeName(), out var items))
@@ -109,6 +113,8 @@ namespace Aura.Data
 
 			Type elementType = element.GetType ();
 
+			await this.loadTask;
+
 			await Sync.WaitAsync ();
 			try {
 				if (!this.elements.TryGetValue (elementType.GetSimpleTypeName(), out var items)) {
@@ -125,7 +131,7 @@ namespace Aura.Data
 				
 				items[element.Id] = element;
 				await SaveAsync ();
-				Messenger.Default.Send (new ElementsChangedMessage (elementType));
+				Messenger.Default.Send (new ElementsChangedMessage (elementType, element.Id));
 				return element;
 			} finally {
 				Sync.Release ();
@@ -139,6 +145,8 @@ namespace Aura.Data
 
 			Type elementType = element.GetType ();
 
+			await this.loadTask;
+
 			await Sync.WaitAsync ();
 			try {
 				if (!this.elements.TryGetValue (elementType.GetSimpleTypeName(), out var items)) {
@@ -147,7 +155,7 @@ namespace Aura.Data
 
 				if (items.Remove (element.Id)) {
 					await SaveAsync ();
-					Messenger.Default.Send (new ElementsChangedMessage (elementType));
+					Messenger.Default.Send (new ElementsChangedMessage (elementType, element.Id));
 				}
 			} finally {
 				Sync.Release ();
@@ -168,10 +176,13 @@ namespace Aura.Data
 		protected abstract Task<IDictionary<string, IDictionary<string, object>>> LoadAsync ();
 
 		private IDictionary<string, IDictionary<string, object>> elements;
+		private Task loadTask;
 
 		private async void Load()
 		{
-			this.elements = await LoadAsync ();
+			var load = LoadAsync ();
+			this.loadTask = load;
+			this.elements = await load;
 		}
 	}
 }

@@ -211,7 +211,8 @@ namespace Aura
 			{ typeof(EncounterElement), "encounters" },
 			{ typeof(LayerElement), "layers" },
 			{ typeof(CampaignElement), "campaigns" },
-			{ typeof(PlaySpaceElement), "playspaces" }
+			{ typeof(PlaySpaceElement), "playspaces" },
+			{ typeof(EnvironmentElement), "elements" }
 		};
 
 		private bool isNavigating;

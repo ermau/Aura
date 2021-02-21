@@ -14,14 +14,8 @@ namespace Aura.ViewModels
 		public EditCampaignsViewModel (IAsyncServiceProvider services)
 			: base (services)
 		{
-			DeleteCampaign = new RelayCommand (OnDelete, CanDelete);
 			JoinCampaign = new RelayCommand (() => MessengerInstance.Send (new RequestJoinCampaignPromptMessage ()));
 			CreateCampaign = new RelayCommand (() => MessengerInstance.Send (new RequestCreateCampaignPromptMessage ()));
-		}
-
-		public ICommand DeleteCampaign
-		{
-			get;
 		}
 
 		public ICommand JoinCampaign

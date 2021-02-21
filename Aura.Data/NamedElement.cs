@@ -1,4 +1,7 @@
-﻿namespace Aura.Data
+﻿using System;
+using System.Collections.Generic;
+
+namespace Aura.Data
 {
 	public record NamedElement
 		: Element
@@ -8,5 +11,11 @@
 			get;
 			init;
 		}
+
+		public IReadOnlyCollection<string> Tags
+		{
+			get;
+			init;
+		} = Array.Empty<string> ();
 	}
 }

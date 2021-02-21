@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Aura.Data
 {
@@ -12,13 +14,19 @@ namespace Aura.Data
 		{
 			get;
 			init;
-		}
+		} = Array.Empty<string> ();
 
 		public IReadOnlyDictionary<string, IReadOnlyList<PairedDevice>> Pairings
 		{
 			get;
 			init;
-		}
+		} = new Dictionary<string, IReadOnlyList<PairedDevice>> ();
+
+		public IReadOnlyList<LightingConfiguration> LightingConfigurations
+		{
+			get;
+			init;
+		} = Array.Empty<LightingConfiguration> ();
 	}
 
 	public record PairedDevice

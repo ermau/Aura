@@ -37,8 +37,9 @@ namespace Aura
 	{
 		Task<T> GetElementByIdAsync<T> (string id) where T : Element;
 
+		[Obsolete]
 		Task<IReadOnlyList<NamedElement>> FindElementsByNameAsync (string search);
-		Task<IReadOnlyList<T>> FindElements<T> (Expression<Func<T, bool>> predicateExpression) where T : Element;
+		Task<IReadOnlyList<T>> FindElementsAsync<T> (Expression<Func<T, bool>> predicateExpression) where T : Element;
 
 		Task<IReadOnlyList<T>> GetElementsAsync<T>() where T : Element;
 		Task<T> SaveElementAsync<T> (T element) where T : Element;

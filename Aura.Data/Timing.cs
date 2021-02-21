@@ -2,30 +2,30 @@
 
 namespace Aura.Data
 {
-	public class Timing
+	public record Timing
 	{
 		public TimeSpan MinStartDelay
 		{
 			get;
-			set;
+			init;
 		}
 
 		public TimeSpan MaxStartDelay
 		{
 			get;
-			set;
+			init;
 		}
 
 		public TimeSpan MinimumReoccurance
 		{
 			get;
-			set;
+			init;
 		}
 
 		public TimeSpan MaximumReoccurance
 		{
 			get;
-			set;
+			init;
 		}
 
 		public TimeSpan GetNextTime (Random rand, bool isFirst = false)

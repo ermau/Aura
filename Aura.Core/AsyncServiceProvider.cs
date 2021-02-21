@@ -55,6 +55,18 @@ namespace Aura.Services
 			return instance;
 		}
 
+		public async Task<object> GetServiceAsync (Type type)
+		{
+			if (this.services.TryGetValue (type, out Task existing))
+				return await ((Task<object>)existing).ConfigureAwait (false);
+
+			var host = await this.compositionHost.ConfigureAwait (false);
+			object instance = host.GetExport (type);
+
+			this.services[type] = Task.FromResult (instance);
+			return instance;
+		}
+
 		private readonly Task<CompositionHost> compositionHost;
 		private readonly ConcurrentDictionary<Type, Task> services = new ConcurrentDictionary<Type, Task> ();
 

@@ -1,0 +1,204 @@
+﻿<UserControl
+    x:Class="Aura.ElementEditorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Aura"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	mc:Ignorable="d" d:DesignHeight="720" d:DesignWidth="680"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+	<UserControl.Resources>
+		<Style TargetType="TextBox">
+			<Setter Property="Margin" Value="0,5,0,5" />
+			<Setter Property="IsSpellCheckEnabled" Value="False" />
+		</Style>
+
+		<Style TargetType="Slider">
+			<Setter Property="Margin" Value="0,5,0,5" />
+		</Style>
+
+		<Style TargetType="ToggleSwitch">
+			<Setter Property="Margin" Value="0,5,0,5" />
+		</Style>
+
+		<Style x:Key="SectionPanel" TargetType="StackPanel">
+			<Setter Property="Margin" Value="0,5,0,5" />
+		</Style>
+	</UserControl.Resources>
+
+	<StackPanel>
+		<Grid Margin="5">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition />
+				<ColumnDefinition Width="Auto" />
+			</Grid.ColumnDefinitions>
+			
+			<TextBox Grid.Column="0" PlaceholderText="Name" Text="{Binding Name,Mode=TwoWay}" HorizontalAlignment="Stretch" />
+			<StackPanel Orientation="Horizontal" Grid.Column="1" Margin="5,0,0,0">
+				<Button Command="{Binding SaveCommand}" Style="{ThemeResource AccentButtonStyle}" MinWidth="75">Save</Button>
+				<Button Command="{Binding ResetCommand}" MinWidth="75" Margin="5,0,0,0">Reset</Button>
+			</StackPanel>
+		</Grid>
+		<Pivot>
+			<PivotItem Header="General">
+				<ScrollViewer>
+					<StackPanel>
+						<StackPanel Name="timing" DataContext="{Binding GeneralTiming}" Style="{StaticResource SectionPanel}">
+							<TextBlock Style="{ThemeResource SubtitleTextBlockStyle}">Timing</TextBlock>
+							<TextBox Header="Start Delay" InputScope="TimeMinutesOrSeconds" Text="{Binding MinStartDelay,Mode=TwoWay}" />
+							<TextBox Header="Minimum Reoccurance" InputScope="TimeMinutesOrSeconds" Text="{Binding MinimumReoccurance,Mode=TwoWay}" />
+							<TextBox Header="Maximum Reoccurance" InputScope="TimeMinutesOrSeconds" Text="{Binding MaximumReoccurance,Mode=TwoWay}" />
+						</StackPanel>
+						<StackPanel Name="positioning" Style="{StaticResource SectionPanel}">
+							<TextBlock Style="{ThemeResource SubtitleTextBlockStyle}">Positioning</TextBlock>
+							<!--<ToggleSwitch Header="Fixed position" IsOn="{Binding IsFixedPosition,Mode=TwoWay}" />!-->
+							<StackPanel Margin="0,5,0,5">
+								<TextBlock Text="Random Distance Range" Margin="0,0,0,6" />
+								<Grid>
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition />
+										<ColumnDefinition Width="Auto" />
+										<ColumnDefinition />
+									</Grid.ColumnDefinitions>
+
+									<TextBox Grid.Column="0" InputScope="Number" Text="{Binding MinDistance,Mode=TwoWay}" />
+									<TextBlock Grid.Column="1" Text="to" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Center" />
+									<TextBox Grid.Column="2" InputScope="Number" Text="{Binding MaxDistance,Mode=TwoWay}" />
+								</Grid>
+							</StackPanel>
+							<!--<ToggleSwitch Header="Height" IsOn="{Binding IsHeightRelevant,Mode=TwoWay}" />!-->
+						</StackPanel>
+					</StackPanel>
+				</ScrollViewer>
+			</PivotItem>
+			<PivotItem Header="Audio">
+				<StackPanel>
+					<StackPanel>
+						<StackPanel Orientation="Horizontal">
+							<ToggleSwitch Name="audioSyncToggle" OnContent="Sync Timing" OffContent="Timing trigger:" IsOn="True"/>
+							<ComboBox VerticalAlignment="Center" Visibility="{Binding ElementName=audioSyncToggle,Path=IsOn,Converter={StaticResource InvertBoolVisibility}}">
+								<ComboBoxItem>Random relative</ComboBoxItem>
+								<ComboBoxItem>Trigger points</ComboBoxItem>
+							</ComboBox>
+						</StackPanel>
+
+						<StackPanel Name="audioTiming" Style="{StaticResource SectionPanel}" Visibility="{Binding ElementName=audioSyncToggle, Path=IsOn, Converter={StaticResource InvertBoolVisibility}}">
+							<TextBlock Style="{ThemeResource SubtitleTextBlockStyle}">Timing</TextBlock>
+							<TextBox Header="Start Delay" InputScope="TimeMinutesOrSeconds" Text="{Binding StartDelay,Mode=TwoWay}" />
+							<TextBox Header="Minimum Reoccurance" InputScope="TimeMinutesOrSeconds" Text="{Binding MinimumReoccurance,Mode=TwoWay}" />
+							<TextBox Header="Maximum Reoccurance" InputScope="TimeMinutesOrSeconds" Text="{Binding MaximumReoccurance,Mode=TwoWay}" />
+						</StackPanel>
+					</StackPanel>
+
+					<StackPanel Style="{StaticResource SectionPanel}">
+						<TextBlock Text="Samples" Margin="0,0,0,6" />
+						<ListView Name="samples" Height="150" CanReorderItems="True" ItemsSource="{Binding AudioSamples,Mode=OneTime}" DisplayMemberPath="Name" BorderBrush="{ThemeResource ListBoxBorderThemeBrush}" BorderThickness="1">
+							<ListView.ItemContainerStyle>
+								<Style TargetType="ListViewItem">
+									<Setter Property="ContextFlyout">
+										<Setter.Value>
+											<MenuFlyout>
+												<MenuFlyoutItem Text="Remove" Command="{Binding DataContext.RemoveSourceCommand,ElementName=sources}" CommandParameter="{Binding}" />
+											</MenuFlyout>
+										</Setter.Value>
+									</Setter>
+								</Style>
+							</ListView.ItemContainerStyle>
+						</ListView>
+					</StackPanel>
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Style="{StaticResource SectionPanel}">
+						<Button Style="{ThemeResource ButtonRevealStyle}" Background="Transparent">
+							<SymbolIcon Symbol="Add" />
+							<Button.Flyout>
+								<Flyout x:Name="addAudioFlyout">
+									<Grid Width="200" Height="250">
+										<Grid.RowDefinitions>
+											<RowDefinition Height="Auto" />
+											<RowDefinition Height="*" />
+											<RowDefinition Height="Auto" />
+										</Grid.RowDefinitions>
+
+										<AutoSuggestBox PlaceholderText="Search" Text="{Binding AudioSearch,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
+										<!--<ProgressBar Name="spinner" Grid.Row="1" IsIndeterminate="True" Visibility="{Binding IsLoading,Converter={StaticResource BoolVisibility}}" VerticalAlignment="Top" Margin="0,12,0,0" />!-->
+										<ListView x:Name="list" Grid.Row="1" Background="Transparent" SelectionMode="Multiple" Margin="0,12,0,12" ItemsSource="{Binding AudioSearchResults,Mode=OneTime}" Visibility="{Binding ElementName=spinner,Path=Visibility,Converter={StaticResource InvertBoolVisibility}}">
+											<ListView.ItemContainerStyle>
+												<Style TargetType="ListViewItem">
+													<Setter Property="HorizontalAlignment" Value="Stretch" />
+													<Setter Property="HorizontalContentAlignment" Value="Stretch" />
+												</Style>
+											</ListView.ItemContainerStyle>
+											<ListView.ItemTemplate>
+												<DataTemplate>
+													<ListViewItem>
+														<Grid Margin="0,4,0,4">
+															<Grid.ColumnDefinitions>
+																<ColumnDefinition Width="*" />
+																<ColumnDefinition Width="Auto" />
+															</Grid.ColumnDefinitions>
+
+															<Grid.RowDefinitions>
+																<RowDefinition />
+																<RowDefinition />
+															</Grid.RowDefinitions>
+
+															<TextBlock Grid.Column="0" Text="{Binding Name,Mode=OneTime}" VerticalAlignment="Center" />
+														</Grid>
+													</ListViewItem>
+												</DataTemplate>
+											</ListView.ItemTemplate>
+										</ListView>
+
+										<Button Grid.Row="2" Content="Add" HorizontalAlignment="Stretch" Margin="0,12,0,0" Style="{ThemeResource AccentButtonStyle}" Click="OnAudioAddSample" CommandParameter="{Binding ElementName=list}" />
+									</Grid>
+								</Flyout>
+							</Button.Flyout>
+						</Button>
+						<ToggleButton Style="{ThemeResource ToggleButtonRevealStyle}" IsChecked="{Binding AudioShuffle,Mode=TwoWay}" Background="Transparent" Margin="1,0,0,0">
+							<SymbolIcon Symbol="Shuffle" />
+						</ToggleButton>
+						<ToggleButton Style="{ThemeResource ToggleButtonRevealStyle}" IsChecked="{Binding AudioRepeat,Mode=TwoWay}" Background="Transparent" Margin="1,0,0,0">
+							<SymbolIcon Symbol="RepeatAll" />
+						</ToggleButton>
+					</StackPanel>
+				</StackPanel>
+			</PivotItem>
+			<PivotItem Header="Lighting">
+				<StackPanel DataContext="{Binding Lighting}">
+					<StackPanel Orientation="Horizontal">
+						<ComboBox Header="Type" HorizontalAlignment="Stretch" Width="200" ItemsSource="{Binding Configurations,Mode=OneTime}">
+							<ComboBoxItem IsSelected="True">Ambient</ComboBoxItem>
+							<ComboBoxItem>Flash</ComboBoxItem>
+							<ComboBoxItem>Traveling point</ComboBoxItem>
+						</ComboBox>
+						<ToggleSwitch Header="Preview" Margin="5,0,0,0" VerticalAlignment="Center" IsOn="{Binding IsPreviewing,Mode=TwoWay}" IsEnabled="{Binding CanPreview}" />
+					</StackPanel>
+					<ScrollViewer>
+						<StackPanel>
+							<Slider Header="Brightness" />
+							<ColorPicker HorizontalAlignment="Left" />
+						</StackPanel>
+					</ScrollViewer>
+					<!--
+					<StackPanel>
+						<StackPanel Orientation="Horizontal">
+							<ToggleSwitch Name="lightSyncToggle" OnContent="Sync Timing" OffContent="Timing trigger:" IsOn="True"/>
+							<ComboBox Visibility="{Binding ElementName=audioSyncToggle,Path=IsOn,Converter={StaticResource InvertBoolVisibility}}">
+								<ComboBoxItem>Random relative</ComboBoxItem>
+								<ComboBoxItem>Trigger points</ComboBoxItem>
+							</ComboBox>
+						</StackPanel>
+
+						<StackPanel Name="lightTiming" Style="{StaticResource SectionPanel}" Visibility="{Binding ElementName=audioSyncToggle, Path=IsOn, Converter={StaticResource InvertBoolVisibility}}">
+							<TextBlock Style="{ThemeResource SubtitleTextBlockStyle}">Timing</TextBlock>
+							<TextBox Header="Start Delay" InputScope="TimeMinutesOrSeconds" Text="{Binding StartDelay,Mode=TwoWay}" />
+							<TextBox Header="Minimum Reoccurance" InputScope="TimeMinutesOrSeconds" Text="{Binding MinimumReoccurance,Mode=TwoWay}" />
+							<TextBox Header="Maximum Reoccurance" InputScope="TimeMinutesOrSeconds" Text="{Binding MaximumReoccurance,Mode=TwoWay}" />
+						</StackPanel>
+					</StackPanel>
+					!-->
+				</StackPanel>
+			</PivotItem>
+		</Pivot>
+	</StackPanel>
+</UserControl>

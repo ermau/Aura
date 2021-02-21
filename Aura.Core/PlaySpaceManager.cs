@@ -30,7 +30,9 @@ namespace Aura
 				throw new ArgumentNullException (nameof (availableServices));
 
 			PlaySpaceElement space = SelectedElement;
-			return availableServices.Where (s => space.Services.Contains (s.GetType().GetSimpleTypeName()));
+			return (space != null)
+				? availableServices.Where (s => space.Services.Contains (s.GetType ().GetSimpleTypeName ()))
+				: Enumerable.Empty<IEnvironmentService> ();
 		}
 
 		public async Task EnableServiceAsync (IService service)

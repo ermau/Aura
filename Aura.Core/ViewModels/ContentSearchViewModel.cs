@@ -249,7 +249,7 @@ namespace Aura.ViewModels
 				var entryTask = this.service.GetEntryAsync (this.entry.Id, cancellation);
 				
 				this.sync = await this.services.GetServiceAsync<ISyncService> ();
-				this.sample = (await this.sync.FindElements<FileSample> (fs => fs.SourceUrl == this.entry.SourceUrl)).FirstOrDefault ();
+				this.sample = (await this.sync.FindElementsAsync<FileSample> (fs => fs.SourceUrl == this.entry.SourceUrl)).FirstOrDefault ();
 
 				Entry = await entryTask;
 				var preview = Entry.Previews.FirstOrDefault ();
