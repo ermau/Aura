@@ -36,6 +36,12 @@ namespace Aura.ViewModels
 			set => this.settings.AutodetectPlaySpace = value;
 		}
 
+		public bool DownloadInBackground
+		{
+			get => this.settings.DownloadInBackground;
+			set => this.settings.DownloadInBackground = value;
+		}
+
 		public IReadOnlyList<AuthedServiceViewModel> AuthedServices
 		{
 			get => this.authedServices;
@@ -50,12 +56,12 @@ namespace Aura.ViewModels
 		}
 
 		private readonly IAsyncServiceProvider serviceProvider;
-		private ISettingsManager settings;
+		private SettingsManager settings;
 		private IReadOnlyList<AuthedServiceViewModel> authedServices;
 
 		private async void Load()
 		{
-			this.settings = await this.serviceProvider.GetServiceAsync<ISettingsManager> ();
+			this.settings = await this.serviceProvider.GetServiceAsync<SettingsManager> ();
 			this.settings.SettingsChanged += OnSettingsChanged;
 
 			AuthedServices = (await this.serviceProvider.GetServicesAsync<IAuthenticatedService> ())

@@ -10,9 +10,8 @@ using Aura.Data;
 
 namespace Aura
 {
-	[Export (typeof(ISettingsManager)), Shared]
+	[Export (typeof(SettingsManager)), Shared]
 	internal class SettingsManager
-		: ISettingsManager
 	{
 		[ImportingConstructor]
 		public SettingsManager (ISyncService syncService)
@@ -47,6 +46,12 @@ namespace Aura
 			set { Save (this.settings with { AutodetectPlaySpace = value }); }
 		}
 
+		public bool DownloadInBackground
+		{
+			get => this.settings.DownloadInBackground;
+			set { Save (this.settings with { DownloadInBackground = value }); }
+		}
+
 		private readonly ISyncService syncService;
 		private readonly SemaphoreSlim sync = new (1);
 		private readonly AsyncEventManager<EventHandler> changedEvent = new ();
@@ -65,11 +70,7 @@ namespace Aura
 			try {
 				this.settings = (await this.syncService.GetElementsAsync<SettingsElement> ()).FirstOrDefault();
 				if (this.settings == null) {
-					this.settings = new SettingsElement {
-						AutodetectPlaySpace = true,
-						SpoilerFree = true,
-						VisualizePlayback = true
-					};
+					this.settings = new SettingsElement ();
 				}
 			} finally {
 				this.sync.Release ();
