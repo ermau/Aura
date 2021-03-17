@@ -178,11 +178,17 @@ namespace Aura.Data
 		private IDictionary<string, IDictionary<string, object>> elements;
 		private Task loadTask;
 
+		private async Task LoadCoreAsync()
+		{
+			var results = await LoadAsync ();
+			this.elements = results;
+		}
+
 		private async void Load()
 		{
-			var load = LoadAsync ();
+			var load = LoadCoreAsync ();
 			this.loadTask = load;
-			this.elements = await load;
+			await load;
 		}
 	}
 }
