@@ -16,7 +16,14 @@ namespace Aura.ViewModels
 		public EnvironmentElementViewModel (IAsyncServiceProvider serviceProvider, ISyncService syncService, EnvironmentElement element)
 			: base (serviceProvider, syncService, element)
 		{
-			this.generalTiming = new TimingViewModel (this);
+			this.generalTiming = new TimingViewModel ((timing) => ModifiedElement = ModifiedElement with { Timing = timing }, () => ModifiedElement.Timing);
+			this.audioSamples.CollectionChanged += OnAudioSamplesChanged;
+		}
+
+		public EnvironmentElementViewModel (IAsyncServiceProvider serviceProvider, ISyncService syncService, string id)
+			: base (serviceProvider, syncService, id)
+		{
+			this.generalTiming = new TimingViewModel ((timing) => ModifiedElement = ModifiedElement with { Timing = timing }, () => ModifiedElement.Timing);
 			this.audioSamples.CollectionChanged += OnAudioSamplesChanged;
 		}
 
@@ -45,7 +52,7 @@ namespace Aura.ViewModels
 			set => Positioning = Positioning with { MaximumDistance = new Position { X = value, Y = value } };
 		}
 
-		public IList<SampleViewModel> AudioSamples => this.audioSamples;
+		public IList<AudioSampleViewModel> AudioSamples => this.audioSamples;
 
 		public bool AudioShuffle
 		{
@@ -81,7 +88,7 @@ namespace Aura.ViewModels
 			}
 		}
 
-		public IReadOnlyList<SampleViewModel> AudioSearchResults => this.audioSearchSamples;
+		public IReadOnlyList<AudioSampleViewModel> AudioSearchResults => this.audioSearchSamples;
 
 		public LightingEffectViewModel Lighting
 		{
@@ -102,7 +109,25 @@ namespace Aura.ViewModels
 			set => ModifiedElement = ModifiedElement with { Positioning = value };
 		}
 
-		protected override void OnModified ()
+		protected override async void OnModified ()
+		{
+			await OnModifiedAsync ();
+		}
+
+		protected override async Task LoadAsync ()
+		{
+			await base.LoadAsync ();
+			await OnModifiedAsync ();
+		}
+
+		private readonly TimingViewModel generalTiming, audioTiming, lightingTiming;
+		private bool loadingSamples;
+		private readonly ObservableCollectionEx<AudioSampleViewModel> audioSamples = new ObservableCollectionEx<AudioSampleViewModel> ();
+		
+		private readonly ObservableCollectionEx<AudioSampleViewModel> audioSearchSamples = new ObservableCollectionEx<AudioSampleViewModel> ();
+		private string audioSearch;
+
+		private async Task OnModifiedAsync()
 		{
 			base.OnModified ();
 			RaisePropertyChanged (nameof (Name));
@@ -112,34 +137,19 @@ namespace Aura.ViewModels
 			RaisePropertyChanged (nameof (AudioRepeat));
 			RaisePropertyChanged (nameof (AudioShuffle));
 
-			if (Audio?.Playlist.Samples != null)
-				this.audioSamples.Update (Audio.Playlist.Samples, svm => svm.Id, id => new SampleViewModel (ServiceProvider, SyncService, id));
-			else
-				this.audioSamples.Clear ();
-		}
+			if (Audio?.Playlist.Descriptors != null) {
+				this.loadingSamples = true;
+				await this.audioSamples.UpdateAsync (Audio.Playlist.Descriptors.Distinct (), svm => svm.Id, async id => {
+					var sample = await SyncService.GetElementByIdAsync<AudioSample> (id);
+					if (sample == null)
+						return null;
 
-		protected override async Task LoadAsync ()
-		{
-			await base.LoadAsync ();
-
-			this.loadingSamples = true;
-			if (Element.Audio?.Playlist.Samples != null) {
-				this.audioSamples.Update (
-					Element.Audio?.Playlist.Samples,
-					svm => svm.Id,
-					id => new SampleViewModel (ServiceProvider, SyncService, id));
+					return new AudioSampleViewModel (ServiceProvider, SyncService, sample);
+				});
+				this.loadingSamples = false;
 			} else
 				this.audioSamples.Clear ();
-			
-			this.loadingSamples = false;
 		}
-
-		private readonly TimingViewModel generalTiming, audioTiming, lightingTiming;
-		private bool loadingSamples;
-		private readonly ObservableCollectionEx<SampleViewModel> audioSamples = new ObservableCollectionEx<SampleViewModel> ();
-		
-		private readonly ObservableCollectionEx<SampleViewModel> audioSearchSamples = new ObservableCollectionEx<SampleViewModel> ();
-		private string audioSearch;
 
 		private void OnAudioSamplesChanged (object sender, NotifyCollectionChangedEventArgs e)
 		{
@@ -148,78 +158,95 @@ namespace Aura.ViewModels
 
 			Audio = Audio with {
 				Playlist = Audio.Playlist with {
-					Samples = this.audioSamples.Select (svm => svm.Element.Id).ToArray ()
+					Descriptors = this.audioSamples.Select (svm => svm.Element.Id).Distinct().ToArray ()
 				}
 			};
 		}
 
 		private async void SearchAudio()
 		{
-			IEnumerable<FileSample> results;
+			IEnumerable<AudioSample> results;
 			if (!String.IsNullOrWhiteSpace (AudioSearch))
-				results = (await SyncService.FindElementsAsync<FileSample> (AudioSearch)).OfType<FileSample> ();
+				results = (await SyncService.FindElementsAsync<AudioSample> (AudioSearch));
 			else
-				results = Enumerable.Empty<FileSample> ();
+				results = Enumerable.Empty<AudioSample> ();
 
 			this.audioSearchSamples.Reset (results
 				.Where (fs => !AudioSamples.Any (svm => svm.Element.Id == fs.Id))
-				.Select (fs => new SampleViewModel (ServiceProvider, SyncService, fs)));
+				.Select (fs => new AudioSampleViewModel (ServiceProvider, SyncService, fs)));
 		}
 
 		private class TimingViewModel
 			: ViewModelBase
 		{
-			public TimingViewModel (EnvironmentElementViewModel parent)
+			public TimingViewModel (Action<Timing> setTiming, Func<Timing> getTiming)
 			{
-				this.parent = parent;
+				this.setTiming = setTiming;
+				this.getTiming = getTiming;
 			}
 
-			public TimeSpan MinStartDelay
+			public string MinStartDelay
 			{
-				get => ModifiedElement.Timing.MinStartDelay;
-				set => ModifiedElement = ModifiedElement with
+				get { return Timing.MinStartDelay.ToString (); }
+				set
 				{
-					Timing = ModifiedElement.Timing with
-					{
-						MinStartDelay = value
-					}
-				};
+					if (Timing.MinStartDelay.ToString () == value)
+						return;
+
+					if (!TimeSpan.TryParse (value, out TimeSpan time))
+						return;
+
+					Timing = Timing with { MinStartDelay = time };
+					RaisePropertyChanged ();
+				}
 			}
 
-			public TimeSpan MaxStartDelay
+			public string MaxStartDelay
 			{
-				get => ModifiedElement.Timing.MaxStartDelay;
-				set => ModifiedElement = ModifiedElement with
+				get { return Timing.MaxStartDelay.ToString (); }
+				set
 				{
-					Timing = ModifiedElement.Timing with
-					{
-						MaxStartDelay = value
-					}
-				};
+					if (Timing.MaxStartDelay.ToString () == value)
+						return;
+
+					if (!TimeSpan.TryParse (value, out TimeSpan time))
+						return;
+
+					Timing = Timing with { MaxStartDelay = time };
+					RaisePropertyChanged ();
+				}
 			}
 
-			public TimeSpan MinimumReoccurance
+			public string MinimumReoccurance
 			{
-				get => ModifiedElement.Timing.MinimumReoccurance;
-				set => ModifiedElement = ModifiedElement with
+				get { return Timing.MinimumReoccurance.ToString (); }
+				set
 				{
-					Timing = ModifiedElement.Timing with
-					{
-						MinimumReoccurance = value
-					}
-				};
+					if (Timing.MinimumReoccurance.ToString () == value)
+						return;
+
+					if (!TimeSpan.TryParse (value, out TimeSpan time))
+						return;
+
+					Timing = Timing with { MinimumReoccurance = time };
+					RaisePropertyChanged ();
+				}
 			}
 
-			public TimeSpan MaximumReoccurance
+			public string MaximumReoccurance
 			{
-				get => ModifiedElement.Timing.MaximumReoccurance;
-				set => ModifiedElement = ModifiedElement with
+				get { return Timing.MaximumReoccurance.ToString (); }
+				set
 				{
-					Timing = ModifiedElement.Timing with
-					{
-						MaximumReoccurance = value
-					}
-				};
+					if (Timing.MaximumReoccurance.ToString () == value)
+						return;
+
+					if (!TimeSpan.TryParse (value, out TimeSpan time))
+						return;
+
+					Timing = Timing with { MaximumReoccurance = time };
+					RaisePropertyChanged ();
+				}
 			}
 
 			public void NotifyUpdates()
@@ -230,13 +257,14 @@ namespace Aura.ViewModels
 				RaisePropertyChanged (nameof (MaximumReoccurance));
 			}
 
-			protected EnvironmentElement ModifiedElement
+			protected Timing Timing
 			{
-				get => this.parent.ModifiedElement;
-				set => this.parent.ModifiedElement = value;
+				get => this.getTiming ();
+				set => this.setTiming (value);
 			}
 
-			private readonly EnvironmentElementViewModel parent;
+			private readonly Action<Timing> setTiming;
+			private readonly Func<Timing> getTiming;
 		}
 	}
 }
