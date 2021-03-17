@@ -11,6 +11,12 @@ namespace Aura
 	public interface IContentProviderService
 		: IService
 	{
+		/// <summary>
+		/// Gets whether the service can acquire the sample. Does not consider authorization state.
+		/// </summary>
+		bool CanAcquire (FileSample sample);
+		string GetEntryIdFromUrl (string url);
+
 		Task<ContentPage> SearchAsync (ContentSearchOptions options, CancellationToken cancellationToken);
 
 		Task<ContentEntry> GetEntryAsync (string id, CancellationToken cancellationToken);
@@ -22,6 +28,22 @@ namespace Aura
 		public int Page { get; init; }
 
 		public IReadOnlyList<ContentEntry> Entries { get; init; }
+	}
+
+	public record AudioContentEntry
+		: ContentEntry
+	{
+		public AudioChannels Channels
+		{
+			get;
+			init;
+		}
+
+		public decimal Frequency
+		{
+			get;
+			init;
+		}
 	}
 
 	public record ContentEntry
