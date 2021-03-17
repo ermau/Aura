@@ -94,7 +94,7 @@ namespace Aura.Service.Client
 			return this;
 		}
 
-		public Task<IPreparedElement> PrepareElementAsync (EnvironmentElement element, PlaybackOptions options, CancellationToken cancellationToken)
+		public Task<IPreparedEffect> PrepareElementAsync (EnvironmentElement element, PlaybackOptions options, CancellationToken cancellationToken)
 		{
 			if (element is null)
 				throw new ArgumentNullException (nameof (element));

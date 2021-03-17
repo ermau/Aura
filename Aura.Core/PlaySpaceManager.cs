@@ -14,7 +14,7 @@ namespace Aura
 	internal class PlaySpaceManager
 		: SingleSelectionManager<PlaySpaceElement>
 	{
-		public PlaySpaceManager (ISyncService syncService, ISettingsManager settings)
+		public PlaySpaceManager (ISyncService syncService, SettingsManager settings)
 			: base (syncService)
 		{
 			Messenger.Default.Register<EnableServiceMessage> (this, OnEnableService);
@@ -131,7 +131,7 @@ namespace Aura
 			return true;
 		}
 
-		private ISettingsManager settings;
+		private SettingsManager settings;
 
 		private async void OnEnableService (EnableServiceMessage msg)
 		{
