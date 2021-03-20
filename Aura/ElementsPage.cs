@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Aura.ViewModels;
+using Windows.UI.Xaml.Navigation;
 
 namespace Aura
 {
@@ -15,6 +16,16 @@ namespace Aura
 		{
 			Title = "Elements";
 			DataContext = new EnvironmentElementsViewModel (App.Services);
+			PaneContent = new ElementEditorView ();
+		}
+
+		protected override void OnNavigatedTo (NavigationEventArgs e)
+		{
+			base.OnNavigatedTo (e);
+
+			if (e.Parameter is string id) {
+				((EnvironmentElementsViewModel)DataContext).RequestSelection (id);
+			}
 		}
 	}
 }

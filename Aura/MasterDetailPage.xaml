@@ -20,41 +20,46 @@
 				</Grid.RowDefinitions>
 
 				<TextBlock Padding="10,5,10,5" Grid.Row="0" Text="{Binding Title,ElementName=page}" Style="{ThemeResource SubtitleTextBlockStyle}" />
-				<ComboBox Grid.Row="1" HorizontalAlignment="Stretch" Header="Sort By" Margin="10,5,10,5" Visibility="{Binding ShowSorting,ElementName=page,Converter={StaticResource BoolVisibility}}">
+				<!--<ComboBox Grid.Row="1" HorizontalAlignment="Stretch" Header="Sort By" Margin="10,5,10,5" Visibility="{Binding ShowSorting,ElementName=page,Converter={StaticResource BoolVisibility}}">
 					<ComboBoxItem IsSelected="True">Alphabetical</ComboBoxItem>
 					<ComboBoxItem>Campaign</ComboBoxItem>
-				</ComboBox>
+				</ComboBox>!-->
 
-				<ListBox Name="elementList" Grid.Row="2" ItemsSource="{Binding Elements}" SelectedItem="{Binding SelectedElement,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Element.Name">
-				</ListBox>
+				<ListView Name="elementList" Grid.Row="2" ItemsSource="{Binding Elements}" SelectedItem="{Binding SelectedElement,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Element.Name">
+				</ListView>
 
 				<CommandBar Grid.Row="3">
-					<AppBarButton Icon="Add" Label="Add" ToolTipService.ToolTip="Add Element" AllowFocusOnInteraction="True">
-						<AppBarButton.Flyout>
-							<Flyout>
-								<Flyout.FlyoutPresenterStyle>
-									<Style TargetType="FlyoutPresenter">
-										<Setter Property="ScrollViewer.HorizontalScrollMode" Value="Disabled"/>
-										<Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
-										<Setter Property="TabNavigation" Value="Cycle"/>
-										<Setter Property="Padding" Value="0" />
-										<Setter Property="Background" Value="Transparent" />
-									</Style>
-								</Flyout.FlyoutPresenterStyle>
+					<CommandBar.PrimaryCommands>
+						<AppBarButton Icon="Add" Label="Add" ToolTipService.ToolTip="Add Element" AllowFocusOnInteraction="True">
+							<AppBarButton.Flyout>
+								<Flyout x:Name="addElementFlyout">
+									<Flyout.FlyoutPresenterStyle>
+										<Style TargetType="FlyoutPresenter">
+											<Setter Property="ScrollViewer.HorizontalScrollMode" Value="Disabled"/>
+											<Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+											<Setter Property="TabNavigation" Value="Cycle"/>
+											<Setter Property="Padding" Value="0" />
+											<Setter Property="Background" Value="Transparent" />
+										</Style>
+									</Flyout.FlyoutPresenterStyle>
 
-								<Grid Background="{ThemeResource SystemControlChromeHighAcrylicElementMediumBrush}" Padding="12" Width="300">
-									<Grid.RowDefinitions>
-										<RowDefinition />
-										<RowDefinition />
-									</Grid.RowDefinitions>
+									<Grid Background="{ThemeResource SystemControlChromeHighAcrylicElementMediumBrush}" Padding="12" Width="300">
+										<Grid.RowDefinitions>
+											<RowDefinition />
+											<RowDefinition />
+										</Grid.RowDefinitions>
 
-									<TextBox Name="createName" Header="Name" KeyDown="OnKeyDown" />
-									<Button Command="{Binding CreateElementCommand}" CommandParameter="{Binding Text,ElementName=createName}" Click="OnAddClick" Style="{ThemeResource AccentButtonStyle}" Grid.Row="1" HorizontalAlignment="Stretch" Margin="0,12,0,0">Add</Button>
-								</Grid>
-							</Flyout>
-						</AppBarButton.Flyout>
-					</AppBarButton>
-					<AppBarButton Icon="Delete" Label="Delete" ToolTipService.ToolTip="Delete Element" />
+										<TextBox Name="addName" Header="Name" KeyDown="OnKeyDown" />
+										<Button Name="addButton" Command="{Binding CreateCommand}" CommandParameter="{Binding Text,ElementName=addName}" Click="OnAddClick" Style="{ThemeResource AccentButtonStyle}" Grid.Row="1" HorizontalAlignment="Stretch" Margin="0,12,0,0">Add</Button>
+									</Grid>
+								</Flyout>
+							</AppBarButton.Flyout>
+						</AppBarButton>
+						<AppBarButton Icon="Delete" Label="Delete" Command="{Binding DeleteCommand,Mode=OneTime}" ToolTipService.ToolTip="Delete Element" />
+					</CommandBar.PrimaryCommands>
+					<!--<CommandBar.SecondaryCommands>
+						<AppBarButton Icon="Share" Label="Export" />
+					</CommandBar.SecondaryCommands>!-->
 				</CommandBar>
 			</Grid>
 		</SplitView.Pane>

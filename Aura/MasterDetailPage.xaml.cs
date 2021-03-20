@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-
+using Aura.ViewModels;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -46,6 +46,15 @@ namespace Aura
 			set => SetValue (ShowSortingProperty, value);
 		}
 
+		public static readonly DependencyProperty ShowExportProperty =
+			DependencyProperty.Register (nameof (ShowExport), typeof (bool), typeof (MasterDetailPage), new PropertyMetadata (false));
+
+		public bool ShowExport
+		{
+			get => (bool)GetValue (ShowExportProperty);
+			set => SetValue (ShowExportProperty, value);
+		}
+
 		public static readonly DependencyProperty PaneContentProperty =
 			DependencyProperty.Register (nameof (PaneContent), typeof (object), typeof (MasterDetailPage), new PropertyMetadata (null, 
 				(d,e) => {
@@ -69,16 +78,7 @@ namespace Aura
 
 		protected void OnAddClick (object sender, RoutedEventArgs e)
 		{
-			Popup popup = ((DependencyObject)sender).FindParent<FlyoutPresenter> ()?.Parent as Popup;
-			if (popup == null)
-				return;
-
-			popup.IsOpen = false;
-
-			TextBox text = popup.FindName ("createName") as TextBox;
-			if (text != null) {
-				text.Text = null;
-			}
+			CommitAdd ();
 		}
 
 		protected void OnKeyDown (object sender, KeyRoutedEventArgs e)
@@ -86,15 +86,16 @@ namespace Aura
 			if (e.Key != Windows.System.VirtualKey.Enter)
 				return;
 
-			TextBox text = sender as TextBox;
-			string input = text?.Text;
+			CommitAdd ();
+		}
 
-			var parent = VisualTreeHelper.GetParent ((DependencyObject)sender);
-			var button = (Button)VisualTreeHelper.GetChild (parent, 1);
-			if (button.Command.CanExecute (input)) {
-				button.Command.Execute (input);
-				OnAddClick (sender, e);
-			}
+		private void CommitAdd()
+		{
+			if (this.addButton.Command.CanExecute (this.addButton.CommandParameter))
+				this.addButton.Command.Execute (this.addButton.CommandParameter);
+
+			this.addElementFlyout.Hide ();
+			this.addName.Text = String.Empty;
 		}
 	}
 }
