@@ -131,15 +131,19 @@ namespace Aura
 			Messenger.Default.Register<PairServiceMessage> (this, OnPairService);
 			Messenger.Default.Register<PairServiceWaitMessage> (this, OnWaitForPair);
 			Messenger.Default.Register<PairServiceResultMessage> (this, OnPairServiceResult);
-			
+
+			this.serviceProvider.Expect<DownloadManager> ();
 			this.serviceProvider.Expect<CampaignManager> ();
 			this.serviceProvider.Expect<PlaySpaceManager> ();
+			this.serviceProvider.Expect<PlaybackManager> ();
 
 			ISyncService sync = await this.serviceProvider.GetServiceAsync<ISyncService> ();
-			ISettingsManager settings = await this.serviceProvider.GetServiceAsync<ISettingsManager> ();
+			SettingsManager settings = await this.serviceProvider.GetServiceAsync<SettingsManager> ();
 
+			this.serviceProvider.Register (new DownloadManager (this.serviceProvider));
 			this.serviceProvider.Register (new CampaignManager (sync));
 			this.serviceProvider.Register (new PlaySpaceManager (sync, settings));
+			this.serviceProvider.Register (new PlaybackManager (this.serviceProvider));
 		}
 
 		private async void GetStarted(Task uiReady)

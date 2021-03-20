@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Aura
 {
@@ -21,6 +21,43 @@ namespace Aura
 				Items.Add (item);
 
 			OnCollectionChanged (new NotifyCollectionChangedEventArgs (NotifyCollectionChangedAction.Reset));
+		}
+
+		public async Task UpdateAsync<TId> (IEnumerable<TId> newItems, Func<T, TId> basedOn, Func<TId, Task<T>> getElementAsync)
+		{
+			if (newItems is null)
+				throw new ArgumentNullException (nameof (newItems));
+			if (basedOn is null)
+				throw new ArgumentNullException (nameof (basedOn));
+			if (getElementAsync is null)
+				throw new ArgumentNullException (nameof (getElementAsync));
+
+			var newList = newItems.ToList ();
+
+			var existingMap = this.ToDictionary (basedOn);
+
+			foreach (var kvp in existingMap) {
+				if (!newList.Contains (kvp.Key))
+					Remove (kvp.Value);
+			}
+
+			int i;
+			for (i = 0; i < newList.Count; i++) {
+				TId newId = newList[i];
+
+				var elements = await Task.WhenAll (newList.Skip (i).Select (getElementAsync));
+				if (i < Items.Count) {
+					T existing = Items[i];
+					if (!Equals (basedOn (existing), newId)) {
+						T element = await getElementAsync (newId);
+						if (element != null)
+							Insert (i, element);
+					}
+				} else {
+					AddRange (elements.Where (e => e != null));
+					break;
+				}
+			}
 		}
 
 		public void Update<TId> (IEnumerable<TId> newItems, Func<T, TId> basedOn, Func<TId, T> getElement)

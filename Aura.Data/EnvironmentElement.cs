@@ -30,6 +30,16 @@ namespace Aura.Data
 			get;
 			init;
 		}
+
+		public EnvironmentComponent[] GetComponents()
+		{
+			if (this.components == null)
+				this.components = new EnvironmentComponent[] { Audio, Lighting };
+
+			return this.components;
+		}
+
+		private EnvironmentComponent[] components;
 	}
 
 	public record EnvironmentComponent
@@ -39,21 +49,7 @@ namespace Aura.Data
 			get;
 			init;
 		}
-	}
 
-	public record PositionedComponent
-		: EnvironmentComponent
-	{
-		public Positioning Positioning
-		{
-			get;
-			init;
-		}
-	}
-
-	public record AudioComponent
-		: EnvironmentComponent
-	{
 		public ElementPlaylist Playlist
 		{
 			get;
@@ -61,13 +57,13 @@ namespace Aura.Data
 		} = new ElementPlaylist ();
 	}
 
-	public record LightingComponent
-		:  PositionedComponent
+	public record AudioComponent
+		: EnvironmentComponent
 	{
-		public LightingEffect Effect
-		{
-			get;
-			init;
-		}
+	}
+
+	public record LightingComponent
+		: EnvironmentComponent
+	{
 	}
 }

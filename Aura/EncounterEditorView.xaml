@@ -82,7 +82,7 @@
 		</GridView>
 
 		<CommandBar Grid.Row="3">
-			<AppBarToggleButton Icon="Play" Label="Preview" ToolTipService.ToolTip="Preview Encounter State" />
+			<AppBarToggleButton Icon="Play" Label="Preview" ToolTipService.ToolTip="Preview Encounter State" IsChecked="{Binding IsPreviewing,Mode=TwoWay}"  />
 			<AppBarButton Icon="Add" Label="Add" ToolTipService.ToolTip="Add Element" AllowFocusOnInteraction="True">
 				<AppBarButton.Flyout>
 					<Flyout x:Name="addElementFlyout">
@@ -128,7 +128,7 @@
 					</Flyout>
 				</AppBarButton.Flyout>
 			</AppBarButton>
-			<AppBarButton Icon="Delete" Label="Delete" />
+			<AppBarButton Icon="Delete" Label="Delete" Command="{Binding DeleteElementCommand}" />
 		</CommandBar>
 
 		<ScrollViewer Grid.Row="2" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2" Visibility="{Binding SelectedItem,ElementName=elements,Converter={StaticResource NullVisibility}}" BorderBrush="{ThemeResource AppBarBorderThemeBrush}" BorderThickness="0,1,0,0">

@@ -38,8 +38,8 @@
 			</AutoSuggestBox>
 		</NavigationView.AutoSuggestBox>
 		<NavigationView.MenuItems>
-			<!--<NavigationViewItem Icon="Play" Tag="play">Play</NavigationViewItem>
-			<NavigationViewItemSeparator />!-->
+			<NavigationViewItem Icon="Play" Tag="play">Play</NavigationViewItem>
+			<NavigationViewItemSeparator />
 			<NavigationViewItemHeader>Library</NavigationViewItemHeader>
 			<NavigationViewItem Icon="People" Tag="encounters">Encounters</NavigationViewItem>
 			<!--<NavigationViewItem Content="Layers" Tag="layers">

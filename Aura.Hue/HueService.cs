@@ -40,7 +40,7 @@ namespace Aura.Hue
 			}).ToArray ();
 		}
 
-		public Task StartAsync()
+		public Task StartAsync(IAsyncServiceProvider services)
 		{
 			return Task.CompletedTask;
 		}
@@ -48,6 +48,26 @@ namespace Aura.Hue
 		public Task StopAsync()
 		{
 			return Task.CompletedTask;
+		}
+
+		public void PlayEffect (IPreparedEffect effect)
+		{
+		}
+
+		public void SetIntensity (IPreparedEffect effect, double intensity)
+		{
+		}
+
+		public Task<IPreparedEffect> PrepareEffectAsync (EnvironmentElement element, string descriptor, PlaybackOptions options)
+		{
+			if (element is null)
+				throw new ArgumentNullException (nameof (element));
+
+			LightingComponent lighting = element.Lighting;
+			if (lighting == null)
+				return Task.FromResult<IPreparedEffect> (null);
+
+			return Task.FromResult<IPreparedEffect> (null);
 		}
 
 		public async Task<string> PairAsync (string id, CancellationToken cancellation)

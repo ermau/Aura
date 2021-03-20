@@ -199,7 +199,7 @@ namespace Aura
 			{ "elements", typeof(ElementsPage) },
 			{ "campaigns", typeof(EditCampaignsPage) },
 			{ "playspaces", typeof(PlaySpacesPage) },
-			{ PlayPageName, typeof(JoinGamePage) },
+			{ PlayPageName, typeof(PlayGamePage) },
 			{ "effects", typeof(EffectsPage) },
 			{ "samples", typeof(SamplesPage) }
 		};

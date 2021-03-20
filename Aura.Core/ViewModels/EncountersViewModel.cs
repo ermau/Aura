@@ -75,6 +75,7 @@ namespace Aura.ViewModels
 
 				this.selectedState = value;
 				RaisePropertyChanged ();
+				CancelPreview ();
 
 				if (DeleteStateCommand != null) // base loading
 					((RelayCommand)DeleteStateCommand).RaiseCanExecuteChanged ();
@@ -100,6 +101,18 @@ namespace Aura.ViewModels
 		public ICommand DeleteElementCommand
 		{
 			get;
+		}
+
+		public bool IsPreviewing
+		{
+			get => (this.previewing != null && this.previewing == SelectedState);
+			set
+			{
+				if (value)
+					Preview ();
+				else
+					CancelPreview ();
+			}
 		}
 
 		public string ElementSearch
@@ -177,6 +190,9 @@ namespace Aura.ViewModels
 		private EncounterStateElementViewModel selectedElement;
 		private readonly ObservableCollectionEx<EncounterStateElementViewModel> elements = new ObservableCollectionEx<EncounterStateElementViewModel> ();
 		private readonly ObservableCollectionEx<EnvironmentElementViewModel> elementSearchResults = new ObservableCollectionEx<EnvironmentElementViewModel> ();
+		
+		private CancellationTokenSource previewCancel;
+		private EncounterState previewing;
 
 		private void UpdateElements()
 		{
@@ -196,6 +212,36 @@ namespace Aura.ViewModels
 				id => new EnvironmentElementViewModel (ServiceProvider, SyncService, results.Single (ee => ee.Id == id)));
 		}
 
+		private void CancelPreview(CancellationTokenSource replaceWith = null)
+		{
+			this.previewing = null;
+			var cancel = Interlocked.Exchange (ref this.previewCancel, replaceWith);
+			cancel?.Cancel ();
+			cancel?.Dispose ();
+			RaisePropertyChanged (nameof (IsPreviewing));
+		}
+
+		private async void Preview ()
+		{
+			var cancel = new CancellationTokenSource ();
+			CancelPreview (replaceWith: cancel);
+
+			var state = SelectedState;
+			this.previewing = state;
+			try {
+				PlaybackManager playback = await ServiceProvider.GetServiceAsync<PlaybackManager> ();
+				PlaybackEnvironment env = await playback.PrepareEncounterStateAsync (state, cancellationToken: cancel.Token);
+
+				cancel.Token.Register (() => playback.StopEnvironment (env));
+
+				if (!cancel.IsCancellationRequested)
+					playback.PlayEnvironment (env);
+
+				RaisePropertyChanged ();
+			} catch (OperationCanceledException) {
+			}
+		}
+
 		private void OnRemoveElement()
 		{
 			var elements = new List<EncounterStateElement> (SelectedState.EnvironmentElements);
@@ -209,6 +255,8 @@ namespace Aura.ViewModels
 
 		private void OnDeleteCommand ()
 		{
+			IsPreviewing = false;
+
 			var states = new List<EncounterState> (ModifiedElement.States);
 			states.Remove (SelectedState);
 			ModifiedElement = ModifiedElement with {

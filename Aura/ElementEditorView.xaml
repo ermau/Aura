@@ -163,7 +163,7 @@
 					</StackPanel>
 				</StackPanel>
 			</PivotItem>
-			<PivotItem Header="Lighting">
+			<!--<PivotItem Header="Lighting">
 				<StackPanel DataContext="{Binding Lighting}">
 					<StackPanel Orientation="Horizontal">
 						<ComboBox Header="Type" HorizontalAlignment="Stretch" Width="200" ItemsSource="{Binding Configurations,Mode=OneTime}">
@@ -178,7 +178,7 @@
 							<Slider Header="Brightness" />
 							<ColorPicker HorizontalAlignment="Left" />
 						</StackPanel>
-					</ScrollViewer>
+					</ScrollViewer>!-->
 					<!--
 					<StackPanel>
 						<StackPanel Orientation="Horizontal">
@@ -197,8 +197,8 @@
 						</StackPanel>
 					</StackPanel>
 					!-->
-				</StackPanel>
-			</PivotItem>
+				<!--</StackPanel>
+			</PivotItem>!-->
 		</Pivot>
 	</StackPanel>
 </UserControl>
