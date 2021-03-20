@@ -124,14 +124,12 @@
       <DependentUpon>AudioElementPreview.xaml</DependentUpon>
     </Compile>
     <Compile Include="BoolVisibilityConverter.cs" />
+    <Compile Include="CampaignsPage.cs" />
     <Compile Include="CreateCampaignDialog.xaml.cs">
       <DependentUpon>CreateCampaignDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="DownloadsPage.xaml.cs">
       <DependentUpon>DownloadsPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="EditCampaignsPage.xaml.cs">
-      <DependentUpon>EditCampaignsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="EffectsPage.cs" />
     <Compile Include="ElementEditorView.xaml.cs">
@@ -230,10 +228,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="DownloadsPage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="EditCampaignsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -55,7 +55,11 @@
 								</Flyout>
 							</AppBarButton.Flyout>
 						</AppBarButton>
-						<AppBarButton Icon="Delete" Label="Delete" Command="{Binding DeleteCommand,Mode=OneTime}" ToolTipService.ToolTip="Delete Element" />
+						<AppBarButton Icon="Delete" Label="Delete" Command="{Binding DeleteCommand,Mode=OneTime}" ToolTipService.ToolTip="Delete Element">
+							<AppBarButton.KeyboardAccelerators>
+								<KeyboardAccelerator Key="Delete" />
+							</AppBarButton.KeyboardAccelerators>
+						</AppBarButton>
 					</CommandBar.PrimaryCommands>
 					<!--<CommandBar.SecondaryCommands>
 						<AppBarButton Icon="Share" Label="Export" />
