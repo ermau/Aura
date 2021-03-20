@@ -75,10 +75,17 @@ namespace Aura.Services
 				});
 			});
 
-			StorageFile db = await RoamingFolder.CreateFileAsync (DbFilename, CreationCollisionOption.ReplaceExisting);
-			using (var stream = await db.OpenStreamForWriteAsync ())
-			using (var writer = new StreamWriter (stream)) {
-				await writer.WriteAsync (await serialize);
+			try {
+				StorageFile newFile = await RoamingFolder.CreateFileAsync (DbFilename + ".serialize", CreationCollisionOption.ReplaceExisting);
+				using (var stream = await newFile.OpenStreamForWriteAsync ())
+				using (var writer = new StreamWriter (stream)) {
+					await writer.WriteAsync (await serialize);
+				}
+
+				StorageFile db = await RoamingFolder.GetFileAsync (DbFilename);
+				await newFile.CopyAndReplaceAsync (db);
+			} catch (Exception ex) {
+				throw;
 			}
 		}
 	}
