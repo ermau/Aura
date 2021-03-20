@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -42,6 +43,7 @@ namespace Aura.ViewModels
 		{
 			AddStateCommand = new RelayCommand<string> (OnAddStateCommand, s => !String.IsNullOrWhiteSpace (s));
 			DeleteStateCommand = new RelayCommand (OnDeleteCommand, SelectedState != null);
+			DeleteElementCommand = new RelayCommand (OnRemoveElement, CanRemoveElement);
 		}
 
 		public string Name
@@ -95,6 +97,11 @@ namespace Aura.ViewModels
 			get;
 		}
 
+		public ICommand DeleteElementCommand
+		{
+			get;
+		}
+
 		public string ElementSearch
 		{
 			get => this.elementSearch;
@@ -119,6 +126,7 @@ namespace Aura.ViewModels
 
 				this.selectedElement = value;
 				RaisePropertyChanged ();
+				((RelayCommand)DeleteElementCommand).RaiseCanExecuteChanged ();
 			}
 		}
 
@@ -133,6 +141,12 @@ namespace Aura.ViewModels
 			elements.AddRange (newElements.Select (eevm => new EncounterStateElement { ElementId = eevm.Id }));
 
 			SelectedState = SelectedState with { EnvironmentElements = elements };
+		}
+
+		protected override void OnDelete ()
+		{
+			IsPreviewing = false;
+			base.OnDelete ();
 		}
 
 		protected override void OnModified ()
@@ -181,6 +195,17 @@ namespace Aura.ViewModels
 				eevm => eevm.Id,
 				id => new EnvironmentElementViewModel (ServiceProvider, SyncService, results.Single (ee => ee.Id == id)));
 		}
+
+		private void OnRemoveElement()
+		{
+			var elements = new List<EncounterStateElement> (SelectedState.EnvironmentElements);
+			elements.Remove (SelectedElement.Element);
+
+			SelectedElement = null;
+			SelectedState = SelectedState with { EnvironmentElements = elements };
+		}
+
+		private bool CanRemoveElement () => SelectedElement != null;
 
 		private void OnDeleteCommand ()
 		{
