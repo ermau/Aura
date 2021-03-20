@@ -21,7 +21,7 @@ namespace Aura
 
 			Button button = (Button)sender;
 			ListView list = (ListView)button.CommandParameter;
-			vm.AudioSamples.AddRange (list.SelectedItems.Cast<SampleViewModel> ());
+			vm.AudioSamples.AddRange (list.SelectedItems.Cast<AudioSampleViewModel> ());
 			vm.AudioSearch = null;
 
 			this.addAudioFlyout.Hide ();

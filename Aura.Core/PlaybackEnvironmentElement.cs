@@ -85,12 +85,14 @@ namespace Aura
 				if (Intensity != state.LastIntensity) {
 					IPreparedEffect currentEffect;
 					if (updating || state.CurrentEffect == null)
-						currentEffect = state.NextPrepare.Result;
+						currentEffect = state.NextPrepare?.Result;
 					else
 						currentEffect = state.CurrentEffect;
 
-					service.SetIntensity (currentEffect, Intensity);
-					state.LastIntensity = Intensity;
+					if (currentEffect != null) {
+						service.SetIntensity (currentEffect, Intensity);
+						state.LastIntensity = Intensity;
+					}
 				}
 
 				if (updating && state.IsActive) {
@@ -143,6 +145,9 @@ namespace Aura
 
 				string currentDescriptor = NextDescriptor;
 				NextDescriptor = GetNextDescriptor ();
+				if (NextDescriptor == null)
+					return;
+
 				NextTime = (Component.Timing ?? element.Timing).GetNextTime (this.random, isFirst);
 
 				var options = new PlaybackOptions {
@@ -171,6 +176,8 @@ namespace Aura
 			private string GetNextDescriptor ()
 			{
 				var playlist = Component.Playlist;
+				if (playlist.Descriptors.Count == 0)
+					return null;
 				if (playlist.Descriptors.Count == 1)
 					return playlist.Descriptors[0];
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -67,8 +68,15 @@ namespace Aura.ViewModels
 			base.OnDelete ();
 
 			var storage = await ServiceProvider.GetServiceAsync<ILocalStorageService> ();
+
 			string id = Element.Id;
-			await storage.DeleteAsync (id, Element.ContentHash);
+
+			try {
+				if (!Uri.TryCreate (Element.SourceUrl, UriKind.Absolute, out Uri uri) || !uri.IsFile)
+					await storage.DeleteAsync (id, Element.ContentHash);
+			} catch (Exception ex) {
+				Trace.TraceWarning ($"Unable to delete sample {id}:{Element.SourceUrl} from storage: {ex}");
+			}
 
 			var elements = await SyncService.FindElementsAsync<EnvironmentElement> (ee => ee.Audio.Playlist.Descriptors.Contains (id));
 			foreach (var ee in elements) {

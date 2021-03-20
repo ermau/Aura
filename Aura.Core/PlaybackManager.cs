@@ -141,29 +141,50 @@ namespace Aura
 			if (environment is null)
 				throw new ArgumentNullException (nameof (environment));
 
-			PlaybackEnvironment previous = Interlocked.Exchange (ref this.currentEnvironment, environment);
-			if (previous != null) {
-				var originalPrevious = Interlocked.Exchange (ref this.previousEnvironment, previous);
-				originalPrevious?.Stop ();
+			PlaybackEnvironment previous;
+			this.lck.Wait ();
+			try {
+				previous = Interlocked.Exchange (ref this.currentEnvironment, environment);
+				if (previous != null) {
+					var originalPrevious = Interlocked.Exchange (ref this.previousEnvironment, previous);
+					originalPrevious?.Stop ();
 
-				if (transition) {
-					previous.TransitionToAsync (environment, TransitionTime);
-				} else {
-					previous.Stop ();
+					if (transition) {
+						previous.TransitionToAsync (environment, TransitionTime);
+					} else {
+						previous.Stop ();
+					}
+				} else if (transition) {
+					environment.FadeInAsync (TransitionTime);
 				}
-			} else if (transition) {
-				environment.FadeInAsync (TransitionTime);
+			} finally {
+				this.lck.Release ();
 			}
 
 			EnvironmentChanged?.Invoke (this, new PlaybackEnvironmentChangedEventArgs (previous, environment));
 		}
 
-		public void Stop (bool transition = true)
+		/// <summary>
+		/// Stops the <paramref name="environment"/> if it is the currently playing environment.
+		/// </summary>
+		public void StopEnvironment (PlaybackEnvironment environment, bool transition = true)
 		{
-			PlaybackEnvironment previous = Interlocked.Exchange (ref this.currentEnvironment, null);
+			if (this.currentEnvironment != environment)
+				return;
 
-			var originalPrevious = Interlocked.Exchange (ref this.previousEnvironment, previous);
-			originalPrevious?.Stop ();
+			PlaybackEnvironment previous;
+			this.lck.Wait ();
+			try {
+				if (this.currentEnvironment != environment)
+					return;
+
+				previous = Interlocked.Exchange (ref this.currentEnvironment, null);
+
+				var originalPrevious = Interlocked.Exchange (ref this.previousEnvironment, previous);
+				originalPrevious?.Stop ();
+			} finally {
+				this.lck.Release ();
+			}
 
 			if (previous == null)
 				return;
@@ -175,6 +196,14 @@ namespace Aura
 			}
 
 			EnvironmentChanged?.Invoke (this, new PlaybackEnvironmentChangedEventArgs (previous, null));
+		}
+
+		/// <summary>
+		/// Stops the currently playing environment.
+		/// </summary>
+		public void Stop (bool transition = true)
+		{
+			StopEnvironment (this.currentEnvironment, transition);
 		}
 
 		private readonly SemaphoreSlim lck = new SemaphoreSlim (1);

@@ -15,13 +15,11 @@ using Aura.ViewModels;
 using GalaSoft.MvvmLight.Messaging;
 
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Foundation;
 using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 
@@ -58,7 +56,7 @@ namespace Aura
 
 			Messenger.Default.Register<ConnectCampaignMessage> (this, cc => {
 				// If the play page has already been created, this will swap to it, but it will have heard
-				// this messege and start connecting to it.
+				// this message and start connecting to it.
 				if (!TryNavigateToPage (PlayPageName))
 					return;
 
@@ -216,7 +214,7 @@ namespace Aura
 		};
 
 		private bool isNavigating;
-		private Flyout dragFlyout;
+		private IDisposable dragFlyout;
 		private CancellationTokenSource clipboardCampaignCancel;
 
 		private async void OnClipboardContentChanged (object sender, object e)
@@ -231,10 +229,8 @@ namespace Aura
 
 		private const int Inset = 70;
 
-		private void OnDragEnter (object sender, DragEventArgs e)
+		private async void OnDragEnter (object sender, DragEventArgs e)
 		{
-			HideDragFlyout ();
-
 			if (AttemptShowConnect (e))
 				return;
 
@@ -242,11 +238,14 @@ namespace Aura
 				e.AcceptedOperation = DataPackageOperation.Copy;
 				e.DragUIOverride.IsCaptionVisible = false;
 
-				this.dragFlyout = (Flyout)Resources["ImportFlyout"];
-				this.dragFlyout.ShowAt (this.contentFrame, new FlyoutShowOptions {
-					Position = new Point (this.contentFrame.ActualWidth / 2, Inset),
-					ShowMode = FlyoutShowMode.Transient
-				});
+				var items = await e.DataView.GetStorageItemsAsync ();
+				bool many = (items.Count > 1 || items.OfType<IStorageFolder> ().Any ());
+
+				// TODO: localize
+				string message = $"Drop to import {((!many) ? items[0].Name : "files")}";
+				string glyph = (many) ? "\xE8B6" : "\xE8B5";
+				IDisposable old = Interlocked.Exchange (ref this.dragFlyout, FlyoutService.ShowMessage (message, glyph));
+				old?.Dispose ();
 			}
 		}
 
@@ -293,17 +292,15 @@ namespace Aura
 			}
 		}
 
-		private void HideDragFlyout()
-		{
-			if (this.dragFlyout != null) {
-				this.dragFlyout.Hide ();
-				this.dragFlyout = null;
-			}
-		}
-
 		private void OnDragLeave (object sender, DragEventArgs e)
 		{
 			HideDragFlyout ();
+		}
+
+		private void HideDragFlyout()
+		{
+			IDisposable flyout = Interlocked.Exchange (ref this.dragFlyout, null);
+			flyout?.Dispose ();
 		}
 
 		private async void PromptConnect(DragEventArgs e)
@@ -337,12 +334,17 @@ namespace Aura
 			}
 		}
 
-		private void OnDrop (object sender, DragEventArgs e)
+		private async void OnDrop (object sender, DragEventArgs e)
 		{
+			HideDragFlyout ();
 			if (e.DataView.CouldHaveLink()) {
-				HideDragFlyout ();
 				PromptConnect (e);
 				return;
+			} else if (e.DataView.Contains (StandardDataFormats.StorageItems)) {
+				var items = await e.DataView.GetStorageItemsAsync ();
+				Task importTask = Importer.ImportAsync (items);
+				TryNavigateToPage ("samples");
+				await importTask;
 			}
 		}
 

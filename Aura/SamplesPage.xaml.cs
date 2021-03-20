@@ -1,5 +1,8 @@
-﻿using Aura.ViewModels;
+﻿using System;
 
+using Aura.ViewModels;
+
+using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -10,7 +13,7 @@ namespace Aura
 	{
 		public SamplesPage ()
 		{
-			DataContext = new SamplesViewModel (App.Services);
+			DataContext = new AudioSamplesViewModel (App.Services);
 			InitializeComponent ();
 		}
 
@@ -19,13 +22,24 @@ namespace Aura
 			base.OnNavigatedTo (e);
 
 			if (e.Parameter is string id) {
-				((SamplesViewModel)DataContext).RequestSelection (id);
+				((AudioSamplesViewModel)DataContext).RequestSelection (id);
 			}
 		}
 
-		protected void OnAddClick (object sender, RoutedEventArgs e)
+		protected void OnFindContent (object sender, RoutedEventArgs e)
 		{
 			Frame.Navigate (typeof (ImportSamplePage));
+		}
+
+		private async void OnImportContent (object sender, RoutedEventArgs e)
+		{
+			var picker = new FileOpenPicker {
+				SuggestedStartLocation = PickerLocationId.MusicLibrary,
+			};
+			picker.FileTypeFilter.AddRange (Importer.SupportedFiles);
+			var files = await picker.PickMultipleFilesAsync ();
+
+			await Importer.ImportAsync (files);
 		}
 	}
 }

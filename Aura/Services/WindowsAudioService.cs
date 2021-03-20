@@ -26,7 +26,9 @@
 
 using System;
 using System.Composition;
+using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -75,6 +77,52 @@ namespace Aura.Services
 			}
 
 			this.output.Start ();
+		}
+
+		public async Task<FileSample> ScanSampleAsync (FileSample sample, IProgress<double> progress = null)
+		{
+			if (sample is null)
+				throw new ArgumentNullException (nameof (sample));
+			if (!(sample is AudioSample audio))
+				throw new ArgumentException ("Must be an audio sample");
+
+			try {
+				StorageFile file;
+				try {
+					file = await StorageFile.GetFileFromPathAsync (sample.SourceUrl).ConfigureAwait (false);
+				} catch (AccessViolationException) {
+					if (sample.Token != null)
+						file = await StorageApplicationPermissions.FutureAccessList.GetFileAsync (sample.Token).ConfigureAwait (false);
+					else
+						throw;
+				}
+
+				CreateAudioFileInputNodeResult result = await this.graph.CreateFileInputNodeAsync (file);
+				if (result.Status != AudioFileNodeCreationStatus.Success) {
+					Trace.TraceWarning ($"Failed to scan file sample: {result.Status}");
+					return null;
+				}
+
+				using (var node = result.FileInputNode) {
+					progress?.Report (.5);
+
+					var hashTask = GetContentHashAsync (await file.OpenStreamForReadAsync ());
+
+					audio = audio with {
+						Duration = node.Duration,
+						Channels = (AudioChannels)node.EncodingProperties.ChannelCount,
+						Frequency = node.EncodingProperties.SampleRate,
+						ContentHash = await hashTask
+					};
+				}
+
+				return audio;
+			} catch (Exception ex) {
+				Trace.TraceWarning ("Failed to scan file sample: " + ex);
+				return null;
+			} finally {
+				progress?.Report (1);
+			}
 		}
 
 		public Task AdjustPlaybackAsync (IPreparedEffect prepared, PlaybackOptions options)
@@ -161,8 +209,37 @@ namespace Aura.Services
 
 		private AudioDeviceOutputNode output;
 
+		private Task<string> GetContentHashAsync (Stream stream)
+		{
+			return Task.Run (() => {
+				SHA256 hasher = SHA256.Create ();
+				byte[] hash;
+				using (stream)
+					hash = hasher.ComputeHash (stream);
+
+				return BitConverter.ToString (hash).Replace ("-", String.Empty);
+			});
+		}
+
 		private async Task<StorageFile> GetFileAsync (AudioSample sample)
 		{
+			if (Uri.TryCreate (sample.SourceUrl, UriKind.Absolute, out Uri uri) && uri.IsFile) {
+				StorageFile file = null;
+				try {
+					file = await StorageFile.GetFileFromPathAsync (sample.SourceUrl).ConfigureAwait (false);
+				} catch (AccessViolationException) {
+					if (sample.Token != null) {
+						try {
+							file = await StorageApplicationPermissions.FutureAccessList.GetFileAsync (sample.Token).ConfigureAwait (false);
+						} catch {
+						}
+					}
+				}
+
+				if (file != null)
+					return file;
+			}
+
 			if (this.storage is LocalStorageService localStorage) {
 				return await localStorage.GetFileAsync (sample.Id, sample.ContentHash).ConfigureAwait (false);
 			}

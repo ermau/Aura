@@ -4,7 +4,7 @@
 // Authors:
 //       Eric Maupin <me@ermau.com>
 //
-// Copyright (c) 2020 Eric Maupin
+// Copyright (c) 2020-2021 Eric Maupin
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
@@ -73,20 +74,20 @@ namespace Aura
 
 			TargetElement = element;
 
-			foreach ((string name, object context) in QueuedFlyouts)
-				PushFlyout (name, context);
+			foreach (FlyoutHandle handle in QueuedFlyouts)
+				PushFlyout (handle);
 
 			QueuedFlyouts = null;
 		}
 
-		public static void ShowMessage (string message, string glyph)
+		public static IDisposable ShowMessage (string message, string glyph)
 		{
 			var context = new MessageFlyoutContext {
 				Message = message,
 				Glyph = glyph
 			};
 
-			PushFlyout ("MessageFlyout", context);
+			return PushFlyout ("MessageFlyout", context);
 		}
 
 		public static void CloseMessage()
@@ -94,21 +95,24 @@ namespace Aura
 			PopFlyout ("MessageFlyout");
 		}
 
-		public static void PushFlyout (string flyoutName, object context)
+		public static IDisposable PushFlyout (string flyoutName, object context)
 		{
 			if (flyoutName == null)
 				throw new ArgumentNullException (nameof (flyoutName));
 
+			var handle = new FlyoutHandle (flyoutName, context);
 			if (TargetElement == null) {
-				QueuedFlyouts.Enqueue ((flyoutName, context));
-				return;
+				QueuedFlyouts.Enqueue (handle);
+				return handle;
 			}
 
 			var oldFlyout = CurrentFlyout;
 			Flyouts.Add (oldFlyout);
 
-			var flyout = GetFlyout (flyoutName, context);
+			var flyout = GetFlyout (handle);
 			SwapFlyouts (oldFlyout, flyout);
+
+			return handle;
 		}
 
 		public static void PopFlyout (string flyoutName)
@@ -129,19 +133,56 @@ namespace Aura
 			PopFlyout (oldFlyout);
 		}
 
-		private static Queue<(string, object)> QueuedFlyouts = new Queue<(string, object)> ();
+		private static Queue<FlyoutHandle> QueuedFlyouts = new Queue<FlyoutHandle> ();
 		private static readonly List<Flyout> Flyouts = new List<Flyout> ();
 		private static Flyout CurrentFlyout;
 		private static FrameworkElement TargetElement;
 		private static CoreApplicationViewTitleBar titleBar;
 		private static double FlyoutInset = 30;
 
-		private static Flyout GetFlyout (string name, object context)
+		private class FlyoutHandle
+			: IDisposable
 		{
-			var flyout = (Flyout)App.Current.Resources[name];
-			((FrameworkElement)flyout.Content).DataContext = context;
+			public FlyoutHandle (string name, object context)
+			{
+				Name = name;
+				Context = context;
+			}
+
+			public string Name { get; }
+			public object Context { get; }
+
+			public void Attach (Flyout flyout)
+			{
+				this.flyout = flyout;
+			}
+
+			public void Dispose()
+			{
+				Flyout original = Interlocked.Exchange (ref this.flyout, null);
+				if (original != null)
+					original.Hide ();
+			}
+
+			private Flyout flyout;
+		}
+
+		private static Flyout GetFlyout (FlyoutHandle handle)
+		{
+			var flyout = (Flyout)App.Current.Resources[handle.Name];
+			((FrameworkElement)flyout.Content).DataContext = handle.Context;
+			handle.Attach (flyout);
 
 			return flyout;
+		}
+
+		private static void PushFlyout (FlyoutHandle handle)
+		{
+			var oldFlyout = CurrentFlyout;
+			Flyouts.Add (oldFlyout);
+
+			var flyout = GetFlyout (handle);
+			SwapFlyouts (oldFlyout, flyout);
 		}
 
 		private static void SwapFlyouts (Flyout oldFlyout, Flyout newFlyout)

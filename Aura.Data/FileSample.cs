@@ -38,6 +38,12 @@ namespace Aura.Data
 			init;
 		}
 
+		public string Token
+		{
+			get;
+			init;
+		}
+
 		/// <summary>
 		/// Gets a list of event points in the sample
 		/// </summary>

@@ -34,6 +34,28 @@ namespace Aura.FreeSound
 
 		public bool IsLoggedIn => this.client.IsLoggedIn;
 
+		public bool CanAcquire (FileSample sample)
+		{
+			if (sample == null)
+				return false;
+			if (!Uri.TryCreate (sample.SourceUrl, UriKind.Absolute, out Uri uri))
+				return false;
+
+			return (uri.Host == "freesound.org");
+		}
+
+		public string GetEntryIdFromUrl (string url)
+		{
+			if (!Uri.TryCreate (url, UriKind.Absolute, out Uri uri))
+				return null;
+			if (uri.Segments.Length != 3 || uri.Segments[1].ToLowerInvariant() != "sounds/")
+				return null;
+
+			string id = uri.Segments[2];
+			id = id.TrimEnd ('/');
+			return id;
+		}
+
 		public async Task<ContentEntry> GetEntryAsync (string contentId, CancellationToken cancellationToken)
 		{
 			if (string.IsNullOrWhiteSpace (contentId))
@@ -103,9 +125,9 @@ namespace Aura.FreeSound
 
 		private readonly API.FreeSoundClient client;
 
-		private ContentEntry ToEntry (API.FreeSoundInstance instance)
+		private AudioContentEntry ToEntry (API.FreeSoundInstance instance)
 		{
-			return new ContentEntry {
+			return new AudioContentEntry {
 				Id = instance.Id,
 				SourceUrl = $"https://freesound.org/sounds/{instance.Id}/",
 				Name = instance.Name,
@@ -117,8 +139,15 @@ namespace Aura.FreeSound
 				Duration = TimeSpan.FromSeconds (instance.Duration),
 				License = instance.License,
 				Size = instance.Filesize,
-				Previews = instance.Previews?.Select (kvp => new ContentEntryPreview { Url = kvp.Value }).ToList()
+				Previews = instance.Previews?.Select (kvp => new ContentEntryPreview { Url = kvp.Value }).ToList(),
+				Channels = ToChannels (instance.Channels),
+				Frequency = instance.SampleRate
 			};
+		}
+
+		private AudioChannels ToChannels (int channels)
+		{
+			return (AudioChannels)channels;
 		}
 	}
 }

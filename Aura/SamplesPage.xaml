@@ -27,8 +27,19 @@
 				</ListView>
 
 				<CommandBar Grid.Row="3">
-					<AppBarButton Icon="Add" Label="Add" ToolTipService.ToolTip="Add Element" Click="OnAddClick" />
-					<AppBarButton Icon="Delete" Label="Delete" Command="{Binding DeleteCommand,Mode=OneTime}" ToolTipService.ToolTip="Delete Element" />
+					<AppBarButton Icon="Add" Label="Add" ToolTipService.ToolTip="Add Element" AccessKey="A">
+						<AppBarButton.Flyout>
+							<MenuFlyout>
+								<MenuFlyoutItem Text="Import files..." Icon="Import" AccessKey="I" Click="OnImportContent" />
+								<MenuFlyoutItem Text="Find content..." Icon="Find" AccessKey="F" Click="OnFindContent" />
+							</MenuFlyout>
+						</AppBarButton.Flyout>
+					</AppBarButton>
+					<AppBarButton Icon="Delete" Label="Delete" Command="{Binding DeleteCommand,Mode=OneTime}" ToolTipService.ToolTip="Delete Element">
+						<AppBarButton.KeyboardAccelerators>
+							<KeyboardAccelerator Key="Delete" />
+						</AppBarButton.KeyboardAccelerators>
+					</AppBarButton>
 				</CommandBar>
 			</Grid>
 		</SplitView.Pane>

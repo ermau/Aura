@@ -296,9 +296,18 @@ namespace Aura.ViewModels
 				RaisePropertyChanged (nameof (ShowImport));
 				RaisePropertyChanged (nameof (IsDownloading));
 
-				string hash = await this.download.DownloadTask;
+				string hash = await this.download.Task;
 
-				var sample = new FileSample {
+				FileSample sample;
+				if (entry is AudioContentEntry audioEntry) {
+					sample = new AudioSample {
+						Frequency = audioEntry.Frequency,
+						Channels = audioEntry.Channels
+					};
+				} else
+					sample = new FileSample ();
+
+				sample = sample with {
 					Id = newSampleId.ToString(),
 					Name = entry.Name,
 					ContentHash = hash,

@@ -16,6 +16,7 @@ namespace Aura
 		Task<bool> GetIsPresentAsync (Uri fileUri);
 
 		Task<Stream> TryGetStream (string id, string contentHash = null);
+		Task<Stream> TryGetStream (Uri fileUri, string contentHash = null);
 
 		Task<Stream> GetWriteStreamAsync (string id, string contentHash = null);
 	}

@@ -144,6 +144,7 @@
       <DependentUpon>GamePage.xaml</DependentUpon>
     </Compile>
     <Compile Include="IconConverter.cs" />
+    <Compile Include="Importer.cs" />
     <Compile Include="ImportSamplePage.xaml.cs">
       <DependentUpon>ImportSamplePage.xaml</DependentUpon>
     </Compile>
@@ -177,7 +178,6 @@
     </Compile>
     <Compile Include="Services\AuraService.cs" />
     <Compile Include="Services\AuthenticationService.cs" />
-    <Compile Include="Services\FileBackedEnvironmentalService.cs" />
     <Compile Include="Services\LocalCacheService.cs" />
     <Compile Include="Services\LocalStorageService.cs" />
     <Compile Include="Services\LocalSyncService.cs" />

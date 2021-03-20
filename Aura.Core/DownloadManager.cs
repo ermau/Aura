@@ -68,7 +68,7 @@ namespace Aura
 					throw new ArgumentException();
 				}
 
-				if (uri.Scheme == "file") {
+				if (uri.IsFile) {
 					if (await this.storage.GetIsPresentAsync (uri)) {
 						progress?.Report (1);
 						return;
@@ -81,7 +81,25 @@ namespace Aura
 				download = QueueDownload (sample.Id, sample.Name, new Uri (sample.SourceUrl), sample.ContentHash, progress, cancellationToken);
 			}
 
-			await download.DownloadTask;
+			await download.Task;
+		}
+
+		public ManagedDownload QueueImport (string name, Func<CancellationToken, IProgress<double>, Task<FileSample>> getImportTask)
+		{
+			if (string.IsNullOrWhiteSpace (name))
+				throw new ArgumentException ($"'{nameof (name)}' cannot be null or whitespace.", nameof (name));
+			if (getImportTask is null)
+				throw new ArgumentNullException (nameof (getImportTask));
+
+			var source = new CancellationTokenSource ();
+
+			var download = new ManagedDownload (name);
+			download.Task = SampleToHashTask (getImportTask (source.Token, download));
+			lock (this.downloads)
+				this.downloads.Add (download);
+
+			DownloadsChanged?.Invoke (this, EventArgs.Empty);
+			return download;
 		}
 
 		public ManagedDownload QueueDownload (string id, string name, Uri uri, string contentHash = null, IProgress<double> progress = null, CancellationToken cancellationToken = default)
@@ -94,7 +112,7 @@ namespace Aura
 				throw new ArgumentNullException (nameof (uri));
 
 			var download = new ManagedDownload (id, name);
-			download.DownloadTask = DownloadCoreAsync (download, uri, contentHash, cancellationToken);
+			download.Task = DownloadCoreAsync (download, uri, contentHash, cancellationToken);
 			lock (this.downloads)
 				this.downloads.Add (download);
 
@@ -112,7 +130,7 @@ namespace Aura
 				throw new ArgumentNullException (nameof (stream));
 
 			var download = new ManagedDownload (id, name);
-			download.DownloadTask = DownloadCoreAsync (download, stream, length, contentHash, cancellation);
+			download.Task = DownloadCoreAsync (download, stream, length, contentHash, cancellation);
 			lock (this.downloads)
 				this.downloads.Add (download);
 
@@ -130,6 +148,17 @@ namespace Aura
 		{
 			this.storage = await this.services.GetServiceAsync<ILocalStorageService> ();
 			this.contentProviders = (await this.services.GetServicesAsync<IContentProviderService> ()).ToArray ();
+		}
+
+		private async Task<string> SampleToHashTask (Task<FileSample> importTask)
+		{
+			FileSample sample = null;
+			try {
+				sample = await importTask;
+			} catch {
+			}
+
+			return sample?.ContentHash;
 		}
 
 		private async Task<string> DownloadCoreAsync (ManagedDownload download, Uri uri, string contentHash, CancellationToken cancellation)
@@ -274,16 +303,24 @@ namespace Aura
 	}
 
 	internal class ManagedDownload
-		: NotifyingObject
+		: NotifyingObject, IProgress<double>
 	{
 		internal ManagedDownload (string id, string name)
 		{
 			if (string.IsNullOrWhiteSpace (id))
-				throw new ArgumentException ($"'{nameof (id)}' cannot be null or whitespace", nameof (id));
+				throw new ArgumentException ($"'{nameof (id)}' cannot be null or whitespace.", nameof (id));
 			if (string.IsNullOrWhiteSpace (name))
 				throw new ArgumentException ($"'{nameof (name)}' cannot be null or whitespace", nameof (name));
 
 			ContentId = id;
+			Name = name;
+		}
+
+		internal ManagedDownload (string name)
+		{
+			if (string.IsNullOrWhiteSpace (name))
+				throw new ArgumentException ($"'{nameof (name)}' cannot be null or whitespace.", nameof (name));
+
 			Name = name;
 		}
 
@@ -326,10 +363,15 @@ namespace Aura
 		/// <summary>
 		/// Gets the task for the actual download resulting in a SHA256 of the file.
 		/// </summary>
-		public Task<string> DownloadTask
+		public Task<string> Task
 		{
 			get;
 			internal set;
+		}
+
+		void IProgress<double>.Report (double value)
+		{
+			Progress = value;
 		}
 
 		private DownloadState state = DownloadState.InProgress;

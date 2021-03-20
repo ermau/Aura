@@ -4,7 +4,7 @@
 // Authors:
 //       Eric Maupin <me@ermau.com>
 //
-// Copyright (c) 2020 Eric Maupin
+// Copyright (c) 2020-2021 Eric Maupin
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,9 +26,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Aura.Data;
@@ -52,6 +51,12 @@ namespace Aura
 		public IPreparedEffect Effect { get; }
 	}
 
+	public interface ISampledService
+		: IEnvironmentService
+	{
+		Task<FileSample> ScanSampleAsync (FileSample sample, IProgress<double> progress = null);
+	}
+
 	public interface IEnvironmentService
 		: IService
 	{
@@ -73,5 +78,36 @@ namespace Aura
 
 		Task StartAsync (IAsyncServiceProvider services);
 		Task StopAsync ();*/
+	}
+
+	public static class EnvironmentServices
+	{
+		public static async Task<ISampledService> GetServiceAsync (this IAsyncServiceProvider self, FileSample sample)
+		{
+			if (self is null)
+				throw new ArgumentNullException (nameof (self));
+			if (sample is null)
+				throw new ArgumentNullException (nameof (sample));
+
+			if (!ServiceMapping.TryGetValue (sample.GetType (), out Type serviceType))
+				return null;
+
+			PlaySpaceManager playSpace = await self.GetServiceAsync<PlaySpaceManager> ().ConfigureAwait (false);
+			await playSpace.Loading.ConfigureAwait (false);
+
+			IEnumerable<IEnvironmentService> services = await self.GetServicesAsync<IEnvironmentService> ().ConfigureAwait (false);
+			services = services.Where (s => serviceType.IsAssignableFrom (s.GetType ()));
+
+			PlaySpaceElement space = playSpace.SelectedElement;
+			if (space != null) {
+				services = services.Where (s => space.Services.Contains (s.GetType ().GetSimpleTypeName ()));
+			}
+
+			return (ISampledService)services.FirstOrDefault ();
+		}
+
+		private static readonly Dictionary<Type, Type> ServiceMapping = new Dictionary<Type, Type> {
+			{ typeof(AudioSample), typeof(IAudioService) }
+		};
 	}
 }

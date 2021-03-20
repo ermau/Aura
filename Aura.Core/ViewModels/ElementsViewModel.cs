@@ -77,7 +77,8 @@ namespace Aura.ViewModels
 		protected async Task LoadAsync()
 		{
 			var elements = (await LoadElementsAsync ()).ToDictionary (t => t.Id);
-			this.elements.Update (elements.Keys, vm => vm.Id, id => InitializeElementViewModel (elements[id]));
+			var ordered = elements.Values.OrderBy (t => t.Name).Select (t => t.Id);
+			this.elements.Update (ordered, vm => vm.Id, id => InitializeElementViewModel (elements[id]));
 		}
 
 		protected virtual async Task<IReadOnlyList<T>> LoadElementsAsync ()
@@ -128,7 +129,7 @@ namespace Aura.ViewModels
 			if (this.saving || !typeof (T).IsAssignableFrom (msg.Type))
 				return;
 
-			RequestReload ();
+			SynchronizationContext.Post (s => RequestReload (), null);
 		}
 	}
 }
