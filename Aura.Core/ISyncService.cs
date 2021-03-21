@@ -35,6 +35,7 @@ namespace Aura
 {
 	internal interface ISyncService
 	{
+		Task<Element> GetElementByIdAsync (string id);
 		Task<T> GetElementByIdAsync<T> (string id) where T : Element;
 
 		[Obsolete]

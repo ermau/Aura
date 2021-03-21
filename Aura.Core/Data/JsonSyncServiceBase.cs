@@ -19,6 +19,22 @@ namespace Aura.Data
 			Load ();
 		}
 
+		public async Task<Element> GetElementByIdAsync (string id)
+		{
+			await this.loadTask;
+			await Sync.WaitAsync ();
+			try {
+				foreach (var items in this.elements.Values) {
+					if (items.TryGetValue (id, out object value))
+						return (Element)value;
+				}
+
+				return null;
+			} finally {
+				Sync.Release ();
+			}
+		}
+
 		public async Task<T> GetElementByIdAsync<T> (string id) where T : Element
 		{
 			await this.loadTask;

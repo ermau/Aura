@@ -81,7 +81,7 @@ namespace Aura
 			AggregateProgress totalProgress = (progress != null) ? new AggregateProgress (progress) : null;
 			if (element.Audio != null) {
 				foreach (string sampleId in element.Audio.Playlist.Descriptors) {
-					FileSample sample = await this.sync.GetElementByIdAsync<FileSample> (sampleId).ConfigureAwait (false);
+					FileSample sample = (await this.sync.GetElementByIdAsync (sampleId).ConfigureAwait (false) as FileSample);
 					if (sample == null)
 						continue;
 
