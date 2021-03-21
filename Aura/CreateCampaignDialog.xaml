@@ -21,6 +21,6 @@
 
 		<FontIcon x:Name="icon" FontSize="200" Glyph="&#xE909;" Margin="0,24,0,24" />
 		<TextBox Grid.Row="1" PlaceholderText="Name this campaign" FontSize="32" HorizontalTextAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Text="{Binding Input,Mode=TwoWay}" />
-		<ToggleSwitch Grid.Row="2" OnContent="Online" OffContent="Offline" IsOn="{Binding IsOnline,Mode=TwoWay}" />
+		<!--<ToggleSwitch Grid.Row="2" OnContent="Online" OffContent="Offline" IsOn="{Binding IsOnline,Mode=TwoWay}" />!-->
 	</Grid>
 </ContentDialog>

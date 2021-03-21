@@ -91,7 +91,7 @@
 						<MenuFlyout x:Name="campaignsMenu">
 							<MenuFlyoutSeparator Name="campaignSeparator" />
 							<MenuFlyoutItem Icon="Edit" Click="OnEditCampaigns">Edit Campaigns</MenuFlyoutItem>
-							<MenuFlyoutItem Icon="Link" Click="OnJoinCampaign">Join Campaign</MenuFlyoutItem>
+							<!--<MenuFlyoutItem Icon="Link" Click="OnJoinCampaign">Join Campaign</MenuFlyoutItem>!-->
 						</MenuFlyout>
 					</NavigationViewItem.ContextFlyout>
 				</NavigationViewItem>
