@@ -14,6 +14,9 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Aura.Data;
+using Aura.Messages;
+
+using GalaSoft.MvvmLight.Messaging;
 
 namespace Aura
 {
@@ -48,6 +51,29 @@ namespace Aura
 			if (await this.storage.GetIsPresentAsync (sample.Id, sample.ContentHash)) {
 				progress?.Report (1);
 				return;
+			}
+
+			if (!this.settings.DownloadInBackground) {
+				Task<bool> downloadQuestionTask;
+				if (this.downloadInBackground != null)
+					downloadQuestionTask = this.downloadInBackground;
+				else {
+					lock (this.settings) {
+						if (this.downloadInBackground == null) {
+							// TODO: Localize
+							var prompt = new PromptMessage ("Download missing files", "Some of the files for these elements are missing. Would you like to download them now?", "Download");
+							Messenger.Default.Send (prompt);
+							this.downloadInBackground = prompt.Result;
+							downloadQuestionTask = this.downloadInBackground;
+						} else
+							downloadQuestionTask = this.downloadInBackground;
+					}
+				}
+
+				if (!await downloadQuestionTask) {
+					progress?.Report (1);
+					return;
+				}
 			}
 
 			IContentProviderService[] providers = await this.services.GetServicesAsync<IContentProviderService> ().ConfigureAwait (false);
@@ -141,6 +167,8 @@ namespace Aura
 		private readonly List<ManagedDownload> downloads = new List<ManagedDownload> ();
 		private readonly IAsyncServiceProvider services;
 		private ILocalStorageService storage;
+		private SettingsManager settings;
+		private Task<bool> downloadInBackground;
 		private IContentProviderService[] contentProviders;
 		private readonly Task setupTask;
 
@@ -148,6 +176,7 @@ namespace Aura
 		{
 			this.storage = await this.services.GetServiceAsync<ILocalStorageService> ();
 			this.contentProviders = (await this.services.GetServicesAsync<IContentProviderService> ()).ToArray ();
+			this.settings = await this.services.GetServiceAsync<SettingsManager> ();
 		}
 
 		private async Task<string> SampleToHashTask (Task<FileSample> importTask)
