@@ -12,7 +12,7 @@ using Q42.HueApi.Models.Groups;
 
 namespace Aura.Hue
 {
-	//[Export (typeof (IService))]
+	//[Export (typeof (IDiscoverableService))]
 	[Export (typeof (IEnvironmentService))]
 	[Export (typeof (ILightingService))]
 	[Shared]

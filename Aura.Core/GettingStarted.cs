@@ -8,6 +8,7 @@ using GalaSoft.MvvmLight.Messaging;
 
 using Aura.Data;
 using Aura.Messages;
+using System.Threading;
 
 namespace Aura
 {
@@ -56,22 +57,42 @@ namespace Aura
 		private static Task RunServiceDiscoveryAsync (IAsyncServiceProvider services)
 		{
 			return Task.Run (async () => {
-				IDiscoverableService[] dservices = (await services.GetServicesAsync<IService> ()).OfType<IDiscoverableService> ().ToArray ();
 
-				var results = new Dictionary<Task<bool>, IDiscoverableService> (dservices.Length);
-				for (int i = 0; i < dservices.Length; i++) {
-					results.Add (dservices[i].DiscoverAsync (), dservices[i]);
+				IAuthenticationService auth = null;
+
+				List<Task> tasks = new List<Task> ();
+
+				IDiscoverableService[] discoverableServices = await services.GetServicesAsync<IDiscoverableService> ();
+				foreach (IDiscoverableService discoverable in discoverableServices) {
+					tasks.Add (DiscoverService (discoverable));
 				}
 
-				while (results.Count > 0) {
-					Task<bool> completed = await Task.WhenAny (results.Keys);
-					IDiscoverableService service = results[completed];
-					results.Remove (completed);
+				IAuthenticatedService[] authenticatedServices = await services.GetServicesAsync<IAuthenticatedService> ();
+				foreach (IAuthenticatedService authed in authenticatedServices) {
+					if (auth == null)
+						auth = await services.GetServiceAsync<IAuthenticationService> ();
 
-					if (completed.Result)
-						Messenger.Default.Send (new ServiceDiscoveredMesage (service));
+					tasks.Add (TryAuth (auth, authed));
 				}
+
+				await Task.WhenAll (tasks);
 			});
+		}
+
+		private static async Task TryAuth (IAuthenticationService auth, IAuthenticatedService authed)
+		{
+			try {
+				await auth.TryAuthenticateAsync (authed, new CancellationTokenSource (5000).Token);
+			} catch (OperationCanceledException) {
+			}
+		}
+
+		private static async Task DiscoverService (IDiscoverableService service)
+		{
+			bool discovered = await service.DiscoverAsync ();
+			if (discovered) {
+				Messenger.Default.Send (new ServiceDiscoveredMesage (service));
+			}
 		}
 	}
 }
