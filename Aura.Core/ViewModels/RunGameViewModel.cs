@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 using Aura.Data;
-
-using GalaSoft.MvvmLight;
 
 namespace Aura.ViewModels
 {
@@ -85,7 +83,7 @@ namespace Aura.ViewModels
 		private IReadOnlyList<RunEncounterStateViewModel> states;
 		private RunEncounterStateViewModel selectedState;
 
-		private void OnCampainsPropertyChanged (object sender, System.ComponentModel.PropertyChangedEventArgs e)
+		private void OnCampainsPropertyChanged (object sender, PropertyChangedEventArgs e)
 		{
 			if (e.PropertyName == nameof (CampaignManager.SelectedElement))
 				OnCampaignChanged ();
