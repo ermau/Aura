@@ -86,11 +86,11 @@ namespace Aura.FreeSound
 			cancellationToken.ThrowIfCancellationRequested ();
 
 			return new ContentPage {
-				Entries = search.Results.Select (ToEntry).ToList ()
+				Entries = search.Results?.Select (ToEntry).ToArray () ?? Array.Empty<AudioContentEntry> ()
 			};
 		}
 
-		public async Task<string> GetUsernameAsync(CancellationToken cancellationToken)
+		public async Task<string> GetUsernameAsync (CancellationToken cancellationToken)
 		{
 			return (await this.client.GetMeAsync (cancellationToken))?.Username;
 		}

@@ -21,9 +21,10 @@ namespace Aura.FreeSound.API
 
 			this.clientId = clientId;
 			this.clientSecret = clientSecret;
+			this.client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue ("Token", clientSecret);
 		}
 
-		public bool IsLoggedIn => this.client.DefaultRequestHeaders.Authorization != null;
+		public bool IsLoggedIn => this.client.DefaultRequestHeaders.Authorization.Scheme == "Bearer";
 
 		public void SetAccessToken (string accessToken)
 		{
@@ -46,7 +47,7 @@ namespace Aura.FreeSound.API
 			this.client.DefaultRequestHeaders.Authorization = null;
 		}
 
-		public async Task<FreeSoundUser> GetMeAsync(CancellationToken cancellationToken)
+		public async Task<FreeSoundUser> GetMeAsync (CancellationToken cancellationToken)
 		{
 			if (this.client.DefaultRequestHeaders.Authorization == null)
 				return null;
@@ -55,7 +56,7 @@ namespace Aura.FreeSound.API
 			return JsonConvert.DeserializeObject<FreeSoundUser> (await result.Content.ReadAsStringAsync ());
 		}
 
-		public Task<OAuthAuthenticationResult> RefreshAsync  (string refreshToken, CancellationToken cancellationToken)
+		public Task<OAuthAuthenticationResult> RefreshAsync (string refreshToken, CancellationToken cancellationToken)
 		{
 			if (string.IsNullOrWhiteSpace (refreshToken))
 				throw new ArgumentException ($"'{nameof (refreshToken)}' cannot be null or whitespace", nameof (refreshToken));
@@ -89,15 +90,26 @@ namespace Aura.FreeSound.API
 			return JsonConvert.DeserializeObject<FreeSoundInstance> (await result.Content.ReadAsStringAsync ());
 		}
 
-		public Task<Stream> DownloadSoundAsync (string soundId)
+		public async Task<Stream> DownloadSoundAsync (string soundId)
 		{
-			return this.client.GetStreamAsync (new Uri ($"{ApiRoot}sounds/{soundId}/download/"));
+			if (IsLoggedIn)
+				return await this.client.GetStreamAsync (new Uri ($"{ApiRoot}sounds/{soundId}/download/"));
+
+			FreeSoundInstance sound = await GetAsync (soundId, CancellationToken.None);
+			if (sound.Previews.TryGetValue (PreviewHqOggField, out string url))
+				return await this.client.GetStreamAsync (url);
+			else if (sound.Previews.TryGetValue (PreviewHqMp3Field, out url))
+				return await this.client.GetStreamAsync (url);
+
+			return null;
 		}
 
 		private readonly HttpClient client = new HttpClient ();
 		private readonly string clientId;
 		private readonly string clientSecret;
 		private const string ApiRoot = "https://freesound.org/apiv2/";
+		private const string PreviewHqOggField = "preview-hq-ogg";
+		private const string PreviewHqMp3Field = "preview-hq-mp3";
 
 		private enum AuthType
 		{
