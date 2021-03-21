@@ -131,11 +131,12 @@ namespace Aura.Data
 				
 				items[element.Id] = element;
 				await SaveAsync ();
-				Messenger.Default.Send (new ElementsChangedMessage (elementType, element.Id));
-				return element;
 			} finally {
 				Sync.Release ();
 			}
+
+			Messenger.Default.Send (new ElementsChangedMessage (elementType, element.Id));
+			return element;
 		}
 
 		public async Task DeleteElementAsync (Element element)
