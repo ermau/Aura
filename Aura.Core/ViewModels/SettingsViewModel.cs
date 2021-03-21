@@ -148,8 +148,6 @@ namespace Aura.ViewModels
 
 			IsLoggedIn = (Username != null);
 			FinishWork ();
-
-			await ((IContentProviderService)Service).SearchAsync (new ContentSearchOptions { Query = "lightning" }, CancellationToken.None);
 		}
 
 		private async void OnLogin ()
