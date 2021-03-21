@@ -80,7 +80,7 @@ namespace Aura.ViewModels
 
 			this.items.AddRange (page.Entries.Select (e => getViewModel (e)));
 
-			if (page.Entries.Count < this.pageSize)
+			if (page.Entries.Count == 0 || page.Entries.Count < this.pageSize)
 				HasMoreItems = false;
 
 			return new LoadMoreItemsResult {
