@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Aura
@@ -16,10 +18,28 @@ namespace Aura
 			this.context = SynchronizationContext.Current;
 		}
 
-		public void FinishDiscovery ()
+		public void FinishDiscovery (int nodes = 0)
 		{
 			this.holdForDiscovery = false;
+			if (nodes > 0) {
+				this.preNodes = new Stack<ProgressNodePercent> ();
+				for (int i = 0; i < nodes; i++) {
+					Interlocked.Add (ref this.total, ProgressNodePercent.PercentTotal);
+					this.preNodes.Push (new ProgressNodePercent (this));
+				}
+			}
+
 			ReportCurrent ();
+		}
+
+		public IProgress<double> PopNode()
+		{
+			if (this.preNodes == null)
+				throw new InvalidOperationException ("Finish discovery before popping pre-allocated nodes");
+			if (this.preNodes.Count == 0)
+				throw new InvalidOperationException ("Pre-allocated nodes have all been used");
+
+			return this.preNodes.Pop ();
 		}
 
 		public IProgress<double> CreateProgressNode ()
@@ -51,6 +71,7 @@ namespace Aura
 
 		private readonly SynchronizationContext context;
 		private readonly IProgress<double> progress;
+		private Stack<ProgressNodePercent> preNodes;
 		private bool holdForDiscovery;
 
 		private long total;
