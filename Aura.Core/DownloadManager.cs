@@ -249,7 +249,7 @@ namespace Aura
 			try {
 				SHA256 hasher = SHA256.Create ();
 				byte[] hash;
-				using (Stream localReadStream = await this.storage.TryGetStream (download.ContentId).ConfigureAwait (false))
+				using (Stream localReadStream = await this.storage.GetStreamAsync (download.ContentId).ConfigureAwait (false))
 					hash = hasher.ComputeHash (localReadStream);
 
 				if (download.State == DownloadState.InProgress)

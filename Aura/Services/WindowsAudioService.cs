@@ -244,7 +244,7 @@ namespace Aura.Services
 				return await localStorage.GetFileAsync (sample.Id, sample.ContentHash).ConfigureAwait (false);
 			}
 
-			using (Stream stream = await storage.TryGetStream (sample.Id, sample.ContentHash).ConfigureAwait (false)) {
+			using (Stream stream = await storage.GetStreamAsync (sample.Id, sample.ContentHash).ConfigureAwait (false)) {
 				StorageFile streamedFile = await StorageFile.CreateStreamedFileAsync (sample.Id, (r) => {
 					stream.CopyTo (r.AsStreamForWrite ());
 				}, null).ConfigureAwait (false);

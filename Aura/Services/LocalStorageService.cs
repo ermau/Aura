@@ -13,7 +13,7 @@ namespace Aura.Services
 	internal class LocalStorageService
 		: ILocalStorageService
 	{
-		public async Task<Stream> TryGetStream (string id, string contentHash = null)
+		public async Task<Stream> GetStreamAsync (string id, string contentHash = null)
 		{
 			if (string.IsNullOrWhiteSpace (id))
 				throw new ArgumentException ($"'{nameof (id)}' cannot be null or whitespace", nameof (id));
@@ -26,7 +26,7 @@ namespace Aura.Services
 			}
 		}
 
-		public async Task<Stream> TryGetStream (Uri fileUri, string contentHash = null)
+		public async Task<Stream> GetStreamAsync (Uri fileUri, string contentHash = null)
 		{
 			if (fileUri is null)
 				throw new ArgumentNullException (nameof (fileUri));
