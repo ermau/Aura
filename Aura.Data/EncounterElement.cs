@@ -31,6 +31,7 @@ namespace Aura.Data
 
 	public record EncounterStateElement
 	{
+		[ElementId]
 		public string ElementId
 		{
 			get;

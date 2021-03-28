@@ -6,6 +6,7 @@ namespace Aura.Data
 {
 	public record ElementPlaylist
 	{
+		[ElementId]
 		public IReadOnlyList<string> Descriptors
 		{
 			get;

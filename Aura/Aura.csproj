@@ -184,9 +184,7 @@
     <Compile Include="SamplesPage.xaml.cs">
       <DependentUpon>SamplesPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Services\AuraService.cs" />
     <Compile Include="Services\AuthenticationService.cs" />
-    <Compile Include="Services\LocalCacheService.cs" />
     <Compile Include="Services\LocalStorageService.cs" />
     <Compile Include="Services\LocalSyncService.cs" />
     <Compile Include="Services\WindowsAudioService.cs" />

@@ -7,6 +7,7 @@ namespace Aura.Data
 	public record LayerElement
 		: CampaignChildElement
 	{
+		[ElementId]
 		public IReadOnlyList<string> EnvironmentElements
 		{
 			get;
