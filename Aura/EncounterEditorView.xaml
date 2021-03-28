@@ -135,6 +135,7 @@
 			<StackPanel DataContext="{Binding SelectedItem,ElementName=elements}">
 				<TextBlock Text="{Binding EnvironmentElement.Name}" Style="{ThemeResource SubtitleTextBlockStyle}" Margin="5" />
 				<ToggleSwitch Header="Starts with state" IsOn="{Binding StartsWithState,Mode=TwoWay}" Margin="5" />
+				<Slider Header="Intensity" Value="{Binding Intensity,Mode=TwoWay}" Minimum="0" Maximum="100" Margin="5" />
 				<StackPanel Orientation="Horizontal" Margin="5">
 					<Button Command="{Binding SaveCommand}" Style="{ThemeResource AccentButtonStyle}" MinWidth="75">Save</Button>
 					<Button Command="{Binding ResetCommand}" MinWidth="75" Margin="5,0,0,0">Reset</Button>

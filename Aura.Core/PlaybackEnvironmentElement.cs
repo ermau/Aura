@@ -40,12 +40,13 @@ namespace Aura
 			StateElement = stateElement ?? throw new ArgumentNullException (nameof (stateElement));
 			Element = element ?? throw new ArgumentNullException (nameof (element));
 			IsActive = StateElement.StartsWithState;
+			Intensity = StateElement.Intensity;
 
 			foreach (EnvironmentComponent component in Element.GetComponents()) {
 				this.componentStates.Add (new ComponentState {
 					Component = component,
 					IsActive = stateElement.StartsWithState,
-					LastIntensity = 1
+					LastIntensity = stateElement.Intensity
 				});
 			}
 		}

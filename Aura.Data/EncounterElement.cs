@@ -37,6 +37,12 @@ namespace Aura.Data
 			init;
 		}
 
+		public double Intensity
+		{
+			get;
+			init;
+		}
+
 		public bool StartsWithState
 		{
 			get;

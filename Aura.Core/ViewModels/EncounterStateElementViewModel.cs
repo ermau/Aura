@@ -37,6 +37,12 @@ namespace Aura.ViewModels
 			}
 		}
 
+		public double Intensity
+		{
+			get => ModifiedElement.Intensity * 100;
+			set { ModifiedElement = ModifiedElement with { Intensity = value / 100 }; }
+		}
+
 		private EnvironmentElement element;
 		private EncounterViewModel encounter;
 
@@ -44,6 +50,7 @@ namespace Aura.ViewModels
 		{
 			base.OnModified ();
 			RaisePropertyChanged (nameof (StartsWithState));
+			RaisePropertyChanged (nameof (Intensity));
 		}
 
 		protected override async Task LoadAsync ()
