@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.0-rc.2.20475.17" />
     <PackageReference Include="MvvmLightLibs" Version="5.4.1.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="System.Composition" Version="5.0.0-rc.2.20475.5" />
     <PackageReference Include="System.Memory" Version="4.5.4" />
     <PackageReference Include="Xamarin.Essentials" Version="1.6.1" />
